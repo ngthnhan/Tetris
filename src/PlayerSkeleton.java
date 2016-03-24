@@ -4,11 +4,16 @@ public class PlayerSkeleton {
 	//implement this function to have a working system
 	public State nextState ;
 	public FeatureFunction func = new FeatureFunction();
+	double[] computedValues;
+	double[] weights;
 	double minval;
 
 	public PlayerSkeleton(){
 		nextState = new State();
-		minval = Double.NEGATIVE_INFINITY
+		minval = Double.NEGATIVE_INFINITY;
+		computedValues = new double[31];
+		Arrays.fill(computedValues,0);
+		weights = new double[31];
 	}
 
 	public int pickMove(State s, int[][] legalMoves) {
@@ -40,12 +45,9 @@ public class PlayerSkeleton {
 			nextState.makeMove(currentMove);
 			if (!nextState.hasLost())
 			{
-				/*
-				Compute the Value of the move
-				I repeat, we have to compute the value of the move to compare to other states
-				I.E. We just have to multiply features with respective weights
-				*/
-				if (currentValue=>maxValue)
+				computeAllFeatures(nextState);
+				currentValue = valueOfState(nextState);
+				if (currentValue>=maxValue)
 				{
 					maxValue = currentValue;
 					bestMove = currentMove;
@@ -53,6 +55,9 @@ public class PlayerSkeleton {
 			}
 
 		}
+		/*
+		Need to implement the learning Techinques. Otherwise, I think PlayerSkeleton is complete.
+		*/
 
 		return bestMove;
 	}

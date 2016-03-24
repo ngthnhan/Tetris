@@ -1,6 +1,9 @@
 /**
  * Created by ThanhNhan on 23/03/2016.
  */
+
+import java.util.Arrays;
+
 public class MainFunction {
     // Write your functions here
 
@@ -24,6 +27,8 @@ public class MainFunction {
 
     // Feature 10
 
+    // Feature 11 - These are basically all the 20 features mentioned in the Project Handout. 
+
 
     // Implementation of f1
 
@@ -32,13 +37,28 @@ public class MainFunction {
     // Implementation of f3
 
     // Implementation of f4
-    public double[] features456(State s){
-    	public double[] computedValues = new double[]{0,0,0};
+
+    /*
+	Also implemented features 1-20 mentioned in the handout
+	Index Labels: 
+	0-Column Transitions
+	1-Number of Holes
+	2-Well Depths(NotCumalative)
+	3 to 11 - Consecutive well depths
+	12 to 21 - Column Heights
+	22 - Maximum column height
+
+    */
+    public void features456(State s){
+    	public double[] computedValues = new double[23];
+    	Arrays.fill(computedValues,0);
     	int[][] field = s.getField();
     	int[] top = s.top();
+    	int maxTop=top[0];
+    	int size = field[].length;
     	for (int i=0;i<field.length;i++)
     	{
-    		for(int j=0;j<field[].length;j++)
+    		for(int j=0;j<size;j++)
     		{
     			if((field[i][j]==1)&&((field[i][j+1]==0)||(field[i][j-1]==0)))
     				computedValues[0]++;
@@ -54,11 +74,17 @@ public class MainFunction {
     					computedValues[2] += Math.min(top[j-1],top[j+1])-top[j];
     			}
     		}
+    	}
+    	for (int j=0;j<size;j++)
+    	{
+    		if (j!=(size-1))
+				computedValues[3+j]=top[j]-top[j+1];
+			if (maxTop<top[j])
+				maxTop=top[j];
+			computedValues[12+j]=top[j];
     	} 
-    	return computedValues;
-
-
-
+    	computedValues[22] = maxTop;
+    	return ;
     }
 
     // Implementation of f5
@@ -72,5 +98,17 @@ public class MainFunction {
     // Implementation of f9
 
     // Implementation of f10
+
+
+    // Implementation of function to compute the Value of a State
+    public double valueOfState()
+    {
+    	double value=0;
+    	for (int i=0;i<computedValues.length;i++)
+    	{
+    		value += computedValues[i]*weights[i];
+    	}
+    	return value;
+    }
 
 }
