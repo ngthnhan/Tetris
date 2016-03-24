@@ -32,6 +32,34 @@ public class MainFunction {
     // Implementation of f3
 
     // Implementation of f4
+    public double[] features456(State s){
+    	public double[] computedValues = new double[]{0,0,0};
+    	int[][] field = s.getField();
+    	int[] top = s.top();
+    	for (int i=0;i<field.length;i++)
+    	{
+    		for(int j=0;j<field[].length;j++)
+    		{
+    			if((field[i][j]==1)&&((field[i][j+1]==0)||(field[i][j-1]==0)))
+    				computedValues[0]++;
+    			if((field[i][j]==0)&&(field[i][j+1]==1))
+    				computedValues[1]++;
+    			if ((j==0||top[j-1]>top[j]) && (j==9||top[j+1]>top[j]))
+    			{
+    				if (j==0)
+    					computedValues[2] += top[1]-top[0];
+    				else if (j==9)
+    					computedValues[2] += top[8]-top[9];
+    				else
+    					computedValues[2] += Math.min(top[j-1],top[j+1])-top[j];
+    			}
+    		}
+    	} 
+    	return computedValues;
+
+
+
+    }
 
     // Implementation of f5
 
