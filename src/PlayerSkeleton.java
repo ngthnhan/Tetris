@@ -24,6 +24,7 @@ public class PlayerSkeleton {
 		for (currentMove = 0; currentMove != legalMoves.length; currentMove++)
 		{
 			int[][] field = s.getField();
+			int[] top = s.getTop();
 			Arrays.fill(nextState.top,0);
 			for(int i=field.length-1;i>=0;i--) 
 			{

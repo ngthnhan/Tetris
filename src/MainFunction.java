@@ -50,15 +50,15 @@ public class MainFunction {
 
     */
     public void features456(State s){
-    	public double[] computedValues = new double[23];
+    	double[] computedValues = new double[23];
     	Arrays.fill(computedValues,0);
     	int[][] field = s.getField();
-    	int[] top = s.top();
+    	int[] top = s.getTop();
     	int maxTop=top[0];
-    	int size = field[].length;
+    	int cumalativeWell;
     	for (int i=0;i<field.length;i++)
     	{
-    		for(int j=0;j<size;j++)
+    		for(int j=0;j<field[0].length;j++)
     		{
     			if((field[i][j]==1)&&((field[i][j+1]==0)||(field[i][j-1]==0)))
     				computedValues[0]++;
@@ -67,17 +67,26 @@ public class MainFunction {
     			if ((j==0||top[j-1]>top[j]) && (j==9||top[j+1]>top[j]))
     			{
     				if (j==0)
-    					computedValues[2] += top[1]-top[0];
+    				{
+    					cumalativeWell = top[1]-top[0];
+    					computedValues[2] += cumalativeWell*(cumalativeWell+1)/2;
+    				}
     				else if (j==9)
-    					computedValues[2] += top[8]-top[9];
+    				{	
+    					cumalativeWell = top[8]-top[9];
+    					computedValues[2] += cumalativeWell*(cumalativeWell+1)/2;
+    				}
     				else
-    					computedValues[2] += Math.min(top[j-1],top[j+1])-top[j];
+    				{
+    					cumalativeWell = Math.min(top[j-1],top[j+1])-top[j];
+    					computedValues[2] += cumalativeWell*(cumalativeWell+1)/2;
+    				}
     			}
     		}
     	}
-    	for (int j=0;j<size;j++)
+    	for (int j=0;j<field[0].length;j++)
     	{
-    		if (j!=(size-1))
+    		if (j!=(field[0].length-1))
 				computedValues[3+j]=top[j]-top[j+1];
 			if (maxTop<top[j])
 				maxTop=top[j];
@@ -101,7 +110,7 @@ public class MainFunction {
 
 
     // Implementation of function to compute the Value of a State
-    public double valueOfState()
+    public double valueOfState(double[] computedValues, double[] weights)
     {
     	double value=0;
     	for (int i=0;i<computedValues.length;i++)
