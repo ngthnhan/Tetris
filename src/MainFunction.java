@@ -208,7 +208,7 @@ public class MainFunction {
 		int[][][] pBottom = State.getpBottom();
 		int totalAcc = 0;
 		int uniqueAcc = 0;
-		boolean uniqueFound;
+		boolean pieceFitsFlag;
 
 		// Note that even though we have four for loops, the time
 		// complexity is not O(n^4), as all the array lenghts are fixed
@@ -217,9 +217,10 @@ public class MainFunction {
 		for (int i = 0; i < top.length - 1; i++) {
 			// For each possible piece
 			for (int j = 0; j < pBottom.length; j++) {
-				uniqueFound = false;
+				pieceFitsFlag = false;
 				// For each rotation
 				for (int k = 0; k < pBottom[j].length; k++) {
+					boolean rotationFitsFlag = true;
 					// For each piece column
 					for (int l = 0; l < pBottom[j][k].length - 1; l++) {
 						// Continue if only two columns are left, and the
@@ -228,18 +229,20 @@ public class MainFunction {
 							continue;
 						// Check if the the stack pattern matches the piece's
 						// bottom
-						if (top[i] - top[i + 1] == pBottom[j][k][l]
+						if (top[i] - top[i + 1] != pBottom[j][k][l]
 								- pBottom[j][k][l + 1]) {
-							uniqueFound = true;
-							totalAcc++;
-						}
-						// Break if part of piece does not fit
-						else
+							// Break if part of piece does not fit
+							rotationFitsFlag = false;
 							break;
+						}
+					}
+					if(rotationFitsFlag){
+						totalAcc++;
+						pieceFitsFlag = true;
 					}
 				}
 				// Only count unique piece once, regardless of number of fits
-				if (uniqueFound)
+				if (pieceFitsFlag)
 					uniqueAcc++;
 			}
 		}
