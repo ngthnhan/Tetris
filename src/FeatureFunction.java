@@ -4,7 +4,7 @@
 
 import java.util.Arrays;
 
-public class MainFunction {
+public class FeatureFunction {
     // Write your functions here
 
     // Feature 1
@@ -42,6 +42,8 @@ public class MainFunction {
 	private double[] featuresVector = new double[NUM_OF_FEATURE];
 
 	public double[] getFeaturesVector() { return featuresVector; }
+	public void readWeightsVector() {
+	}
 
 	/**
 	 * This function will take in a state and action and compute the features
