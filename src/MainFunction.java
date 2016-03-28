@@ -270,10 +270,10 @@ public class MainFunction {
 				// For each rotation
 				for (int k = 0; k < pBottom[j].length; k++) {
 					boolean rotationFitsFlag = true;
-					// For each piece column
+					// For each piece column.
 					for (int l = 0; l < pBottom[j][k].length - 1; l++) {
-						// Continue if only two columns are left, and the
-						// rotation is three squares wide
+						// Skip if only two columns are left, and
+						// the rotation is three squares wide
 						if (top.length - i < pBottom[j][k].length)
 							continue;
 						// Check if the the stack pattern matches the piece's
