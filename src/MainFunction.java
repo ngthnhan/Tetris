@@ -36,8 +36,8 @@ public class MainFunction {
 	public static final int F6 	= 5; // Well sum
 	public static final int F7 	= 6; // Hole depth
 	public static final int F8 	= 7; // Row hole
-	public static final int F9 	= 8; //
-	public static final int F10 = 9; //
+	public static final int F9 	= 8; // Number of different pieces accommodated
+	public static final int F10 = 9; // Total number of pieces + rotations accommodated
 
 	private double[] featuresVector = new double[NUM_OF_FEATURE];
 
@@ -67,7 +67,9 @@ public class MainFunction {
 		featuresVector[F8] = features8(nextStage);
 
 		// Calling feature 9 10 and assign correct values
-		features910(nextStage);
+		double[] features910Return = features910(nextStage);
+		featuresVector[F9] = features910Return[0];
+		featuresVector[F10] = features910Return[1];
 	}
 
     // Implementation of f1
@@ -248,7 +250,7 @@ public class MainFunction {
 
 	// Implementation of f9
 
-	public void features910(State s) {
+	public double[] features910(State s) {
 		double[] computedValues = new double[23];
 		Arrays.fill(computedValues, 0);
 		int[] top = s.getTop();
@@ -294,11 +296,8 @@ public class MainFunction {
 			}
 		}
 
-		// Don't know where to put the data
-
-		// Put inside featuresVector
-		// featuresVector[F9] =
-		// featuersVector[F10] =
+		double[] ret = {uniqueAcc, totalAcc};
+		return ret;
 	}
 
 	// Implementation of f10
