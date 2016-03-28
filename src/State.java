@@ -1,6 +1,5 @@
 import java.awt.Color;
-
-
+import java.util.Arrays;
 
 
 public class State {
@@ -162,6 +161,21 @@ public class State {
 	public State() {
 		nextPiece = randomPiece();
 
+	}
+
+	public State(State s) {
+		//current turn
+		this.turn = s.turn;
+		this.cleared = s.cleared;
+
+		for (int i = 0; i < s.field.length; i++) {
+			this.field[i] = Arrays.copyOf(s.field[i], s.field[i].length);
+		}
+
+		this.top = Arrays.copyOf(s.top, s.top.length);
+
+		//number of next piece
+		this.nextPiece = s.nextPiece;
 	}
 	
 	//random integer, returns 0-6
