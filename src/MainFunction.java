@@ -27,6 +27,48 @@ public class MainFunction {
 
     // Feature 10
 
+	public static final int NUM_OF_FEATURE = 10;
+	public static final int F1 	= 0; // Landing height
+	public static final int F2 	= 1; // Rows clear
+	public static final int F3 	= 2; // Row transition
+	public static final int F4 	= 3; // Col transition
+	public static final int F5 	= 4; // Num of holes
+	public static final int F6 	= 5; // Well sum
+	public static final int F7 	= 6; // Hole depth
+	public static final int F8 	= 7; // Row hole
+	public static final int F9 	= 8; //
+	public static final int F10 = 9; //
+
+	private double[] featuresVector = new double[NUM_OF_FEATURE];
+
+	public double[] getFeaturesVector() { return featuresVector; }
+
+	/**
+	 * This function will take in a state and action and compute the features
+	 * vector of the next state after taking the action
+	 * @param s The current state of tetris
+	 * @param action The index of action taken
+	 *
+	 * This function promise to compute all the features and update
+	 * featuresVector correctly
+	 */
+	private void computeFeatures(State s, int action) {
+		State nextStage = new State(s);
+		nextStage.makeMove(action);
+
+		featuresVector[F1] = getLandingHeight(s, action);
+		featuresVector[F2] = getErodedPieces(s, action);
+		featuresVector[F3] = getRowTransition(nextStage);
+
+		// Calling feature 4 5 6 and assign correct values
+		features456(nextStage);
+
+		featuresVector[F7] = features7(nextStage);
+		featuresVector[F8] = features8(nextStage);
+
+		// Calling feature 9 10 and assign correct values
+		features910(nextStage);
+	}
 
     // Implementation of f1
     double getLandingHeight(State s, int action) {
@@ -143,6 +185,11 @@ public class MainFunction {
 			computedValues[12 + j] = top[j];
 		}
 		computedValues[22] = maxTop;
+
+		// TODO: Change the computedValues to use featuresVector
+		featuresVector[F4] = computedValues[0];
+		featuresVector[F5] = computedValues[1];
+		featuresVector[F6] = computedValues[2];
 		return;
 	}
 
@@ -248,6 +295,10 @@ public class MainFunction {
 		}
 
 		// Don't know where to put the data
+
+		// Put inside featuresVector
+		// featuresVector[F9] =
+		// featuersVector[F10] =
 	}
 
 	// Implementation of f10
