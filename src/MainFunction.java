@@ -105,6 +105,7 @@ public class MainFunction {
 	public void features456(State s) {
 		double[] computedValues = new double[23];
 		Arrays.fill(computedValues, 0);
+		int[][] field = s.getField();
 		int[] top = s.getTop();
 		int maxTop = top[0];
 		int cumalativeWell;
