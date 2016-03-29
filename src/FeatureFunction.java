@@ -4,7 +4,7 @@
 
 import java.util.Arrays;
 
-public class MainFunction {
+public class FeatureFunction {
     // Write your functions here
 
     // Feature 1
@@ -42,6 +42,40 @@ public class MainFunction {
 	private double[] featuresVector = new double[NUM_OF_FEATURE];
 
 	public double[] getFeaturesVector() { return featuresVector; }
+
+	/**
+	 * Checking if the 2 given cells are different. Different are defined in term of
+	 * either filled or not filled. Filled is when a cell contains a non-0 number. Not filled otherwise
+	 * @param cellA
+	 * @param cellB
+     * @return true if cellA is different from cellB. False otherwise
+     */
+	private boolean isDifferent(int cellA, int cellB) {
+		boolean cellAFilled = cellA != 0;
+		boolean cellBFilled = cellB != 0;
+
+		return cellAFilled != cellBFilled;
+	}
+
+	/**
+	 * Checking if 2 given cells are filled
+	 * @param cellA
+	 * @param cellB
+     * @return true if both filled. False otherwise.
+     */
+	private boolean isBothFilled(int cellA, int cellB) {
+		return cellA != 0 && cellB != 0;
+	}
+
+	/**
+	 * Checking if 2 given cells are not filled
+	 * @param cellA
+	 * @param cellB
+     * @return true if both are not filled. False otherwise.
+     */
+	private boolean isBothNotFilled(int cellA, int cellB) {
+		return cellA == 0 && cellB == 0;
+	}
 
 	/**
 	 * This function will take in a state and action and compute the features
@@ -88,33 +122,29 @@ public class MainFunction {
     double getLandingHeight(State s, int orient, int slot) {
         int piece = s.getNextPiece();
 
-        double maxHeight = -1;
+        double height = -1;
         for (int i = 0, col = slot; i < s.getpWidth()[piece][orient]; i++, col++) {
-            double height = s.getTop()[col] - s.getpBottom()[piece][orient][i];
-            maxHeight = Math.max(maxHeight,  height + s.getpHeight()[piece][orient] / 2.0);
+            height = Math.max(height,  s.getTop()[col] - s.getpBottom()[piece][orient][i]);
         }
-        return maxHeight;
+        return height + + s.getpHeight()[piece][orient] / 2.0;
     }
     // Implementation of f2
     int getErodedPieces(State s, int action) {
-        int orient = s.legalMoves()[action][State.ORIENT];
-        int slot = s.legalMoves()[action][State.SLOT];
-        return getErodedPieces(s, orient, slot);
+       	NextState ns = new NextState(s);
+		ns.makeMove(action);
+
+		return ns.getRowsCleared() - s.getRowsCleared();
     }
 
-    int getErodedPieces(State s, int orient, int slot) {
-        State nextState = new State(s);
-        nextState.makeMove(orient, slot);
-        return s.getRowsCleared() - nextState.getRowsCleared();
-    }
     // Implementation of f3
     int getRowTransition(State s) {
         int transCount = 0;
+		int[][] field = s.getField();
         for (int i = 0; i < State.ROWS - 1; i++) {
             if(s.getField()[i][0] == 0) transCount++;
             if(s.getField()[i][State.COLS-1] == 0) transCount++;
             for(int j=1;j<State.COLS;j++) {
-                if (s.getField()[i][j] != s.getField()[i][j - 1]) {
+                if (isDifferent(field[i][j], field[i][j-1])) {
                     transCount++;
                 }
             }
@@ -122,22 +152,6 @@ public class MainFunction {
         return transCount;
     }
 
-    int getRowTransition(State s, int action) {
-        State nextState = new State(s);
-        nextState.makeMove(action);
-
-        int transCount = 0;
-        for (int i = 0; i < State.ROWS - 1; i++) {
-            if(nextState.getField()[i][0] == 0) transCount++;
-            if(nextState.getField()[i][State.COLS-1] == 0) transCount++;
-            for(int j=1;j<State.COLS;j++) {
-                if (nextState.getField()[i][j] != nextState.getField()[i][j - 1]) {
-                    transCount++;
-                }
-            }
-        }
-        return transCount;
-    }
     // Implementation of f4
 
 	/*
