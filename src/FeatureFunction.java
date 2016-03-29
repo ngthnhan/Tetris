@@ -193,8 +193,8 @@ public class FeatureFunction {
 				}
 			}
 		}
-		for (int j = 0; j < field[0].length; j++) {
-			if (j != (field[0].length - 1))
+		for (int j = 0; j < State.ROWS; j++) {
+			if (j != (State.ROWS - 1))
 				computedValues[3 + j] = top[j] - top[j + 1];
 			if (maxTop < top[j])
 				maxTop = top[j];
