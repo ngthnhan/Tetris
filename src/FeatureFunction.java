@@ -99,7 +99,7 @@ public class FeatureFunction {
 		featuresVector[F3] = getRowTransition(nextStage);
 
 		// Calling feature 4 5 6 and assign correct values
-		features456(nextStage);
+		//features456(nextStage);
 
 		featuresVector[F7] = features7(nextStage);
 		featuresVector[F8] = features8(nextStage);
@@ -130,9 +130,7 @@ public class FeatureFunction {
 		// features456(ns, features);
 		//features456(ns);
 
-		features[F4] = 0;
-		features[F5] = 0;
-		features[F6] = 0;
+		features456(ns, features);
 
 		features[F7] = features7(ns);
 		features[F8] = features8(ns);
@@ -216,7 +214,7 @@ public class FeatureFunction {
 	 * 11 - Consecutive well depths 12 to 21 - Column Heights 22 - Maximum
 	 * column height
 	 */
-	public void features456(State s) {
+	public void features456(State s, double[] featuresVector) {
 		double[] computedValues = new double[23];
 		Arrays.fill(computedValues, 0);
 		int[][] field = s.getField();
@@ -229,27 +227,30 @@ public class FeatureFunction {
 				if ((field[i][j] == 1)
 						&& ((field[i][j + 1] == 0) || (field[i][j - 1] == 0)))
 					computedValues[0]++;
+				// If a filled cell is adjacent to an empty cell in the same column, we add 1 to the column transitions
 				if ((field[i][j] == 0) && (field[i][j + 1] == 1))
 					computedValues[1]++;
+				// If a hole is right below an filled cell, we add 1 to number of holes. This is confusing but remember that this is not hole depths but number of holes
 				if ((j == 0 || top[j - 1] > top[j])
 						&& (j == 9 || top[j + 1] > top[j])) {
+					// We check if the adjacent columns have height greater than the current column
 					if (j == 0) {
 						cumulativeWell = top[1] - top[0];
-						computedValues[2] += cumulativeWell
-								* (cumulativeWell + 1) / 2;
+						// For the 1st column, the well depth is the difference between its height and column 2's height
 					} else if (j == 9) {
+						// Same as the previous 1, column9 - column8
 						cumulativeWell = top[8] - top[9];
-						computedValues[2] += cumulativeWell
-								* (cumulativeWell + 1) / 2;
 					} else {
-						cumulativeWell = Math.min(top[j - 1], top[j + 1])
-								- top[j];
-						computedValues[2] += cumulativeWell
-								* (cumulativeWell + 1) / 2;
+						// For any intermediate column, the well depth is the minimum difference between columns height and its neighbours height
+						cumulativeWell = Math.min(top[j - 1], top[j + 1]) - top[j];
 					}
+					computedValues[2] += cumulativeWell
+								* (cumulativeWell + 1) / 2;
+					// Using the formula n*(n+1)/2 to calculate cumulative well depths
 				}
 			}
 		}
+		/*
 		for (int j = 0; j < State.ROWS; j++) {
 			if (j != (State.ROWS - 1))
 				computedValues[3 + j] = top[j] - top[j + 1];
@@ -257,7 +258,7 @@ public class FeatureFunction {
 				maxTop = top[j];
 			computedValues[12 + j] = top[j];
 		}
-		computedValues[22] = maxTop;
+		computedValues[22] = maxTop;*/
 
 		// TODO: Change the computedValues to use featuresVector
 		featuresVector[F4] = computedValues[0];
