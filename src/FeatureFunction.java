@@ -216,22 +216,18 @@ public class FeatureFunction {
 	// Implementation of f7: counting hole depth
 	public int features7(State s) {
 		int finalValue = 0;
-		boolean prevHole = false;
+		boolean holeDetected;
+		int[] top = s.getTop();
 
 		for (int i = 0; i < s.COLS; i++) {
-			for (int j = 0; i < s.ROWS; j++) {
-				if (prevHole == true) {
-					if (s.getField()[j][i] != 0) {
-						prevHole = false;
-						finalValue++;
-					}
-
-				} else {
-					if (s.getField()[j][i] == 0) {
-						prevHole = true;
-
-					}
-				}
+			holeDetected = false;
+			for (int j = 0; j < top[i]; j++) {
+				// Flag if a hole is detected in the column
+				if(s.getField()[j][i] == 0)
+					holeDetected = true;
+				// Count every filled square above the hole
+				else if(holeDetected)
+					finalValue++;
 			}
 		}
 
