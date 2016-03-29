@@ -16,13 +16,25 @@ public class NextState extends State {
     private int[][] 	pHeight;
     private int[][][]	pTop;
 
-    NextState (State s) {
-        this.pBottom = s.getpBottom();
-        this.pHeight = s.getpHeight();
-        this.pTop = s.getpTop();
+    NextState(State s) {
+        this.pBottom = State.getpBottom();
+        this.pHeight = State.getpHeight();
+        this.pTop = State.getpTop();
 
         copyState(s);
     }
+
+	NextState() {
+		this.pBottom = State.getpBottom();
+		this.pHeight = State.getpHeight();
+		this.pTop = State.getpTop();
+
+		this.turn = 0;
+		this.cleared = 0;
+
+		this.field = new int[ROWS][COLS];
+		this.top = new int[COLS];
+	}
 
     public void copyState(State s) {
         originalState = s;
