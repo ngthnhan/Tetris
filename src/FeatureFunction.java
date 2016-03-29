@@ -85,7 +85,11 @@ public class FeatureFunction {
 	 *
 	 * This function promise to compute all the features and update
 	 * featuresVector correctly
+	 *
+	 * @deprecated use {@link #computeFeaturesVector(NextState)} instead.
 	 */
+
+	@Deprecated
 	private void computeFeatures(State s, int action) {
 		State nextStage = new State(s);
 		nextStage.makeMove(action);
@@ -104,6 +108,41 @@ public class FeatureFunction {
 		double[] features910Return = features910(nextStage);
 		featuresVector[F9] = features910Return[0];
 		featuresVector[F10] = features910Return[1];
+	}
+
+	/**
+	 * A more compact function to compute and return the features vector using only a NextState object
+	 * @param ns
+	 * @return feature vectors in an array of double
+     */
+	public double[] computeFeaturesVector(NextState ns) {
+		double[] features = new double[NUM_OF_FEATURE];
+		features[F1] = getLandingHeight(ns.getOriginalState(), ns.getAction());
+		features[F2] = getErodedPieces(ns);
+		features[F3] = getRowTransition(ns);
+
+		// TODO: Implement such that this function returns 3 values into features.
+		// double[] results456 = features456(ns)
+		// features[F4] = results456[0];
+		// features[F5] = results456[1];
+		// featuers[F6] = results456[2]
+		// or param passing
+		// features456(ns, features);
+		//features456(ns);
+
+		features[F4] = 0;
+		features[F5] = 0;
+		features[F6] = 0;
+
+		features[F7] = features7(ns);
+		features[F8] = features8(ns);
+
+		// Calling feature 9 10 and assign correct values
+		double[] features910Return = features910(ns);
+		features[F9] = features910Return[0];
+		features[F10] = features910Return[1];
+
+		return features;
 	}
 
     // Implementation of f1
@@ -126,15 +165,32 @@ public class FeatureFunction {
         for (int i = 0, col = slot; i < s.getpWidth()[piece][orient]; i++, col++) {
             height = Math.max(height,  s.getTop()[col] - s.getpBottom()[piece][orient][i]);
         }
-        return height + + s.getpHeight()[piece][orient] / 2.0;
+        return height + s.getpHeight()[piece][orient] / 2.0;
     }
     // Implementation of f2
+
+	/**
+	 * @deprecated use {@link #getErodedPieces(NextState)} instead
+	 * @param s
+	 * @param action
+     * @return
+     */
+	@Deprecated
     int getErodedPieces(State s, int action) {
        	NextState ns = new NextState(s);
 		ns.makeMove(action);
 
 		return ns.getRowsCleared() - s.getRowsCleared();
     }
+
+	/**
+	 * Compute the number of rows removed if a move is taken within the NextState object
+	 * @param ns the state where the move is already taken place
+	 * @return number of rows removed.
+     */
+	int getErodedPieces(NextState ns) {
+		return ns.getRowsCleared() - ns.getOriginalState().getRowsCleared();
+	}
 
     // Implementation of f3
     int getRowTransition(State s) {
@@ -169,6 +225,7 @@ public class FeatureFunction {
 		int cumalativeWell;
 		for (int i = 0; i < field.length; i++) {
 			for (int j = 0; j < field[0].length; j++) {
+				// FIXME: Boundary checking when j = 0
 				if ((field[i][j] == 1)
 						&& ((field[i][j + 1] == 0) || (field[i][j - 1] == 0)))
 					computedValues[0]++;
@@ -240,7 +297,7 @@ public class FeatureFunction {
 
 		int[] top = s.getTop();
 		for (int i = 0; i < s.ROWS; i++) {
-			for (int j = 0; i < s.COLS; j++) {
+			for (int j = 0; j < s.COLS; j++) {
 				// Skip if above top of column
 				if(i > top[j]) continue;
 				// If a hole is found, count row and jump to next row
@@ -315,6 +372,23 @@ public class FeatureFunction {
 			value += computedValues[i] * weights[i];
 		}
 		return value;
+	}
+
+	/**
+	 * A compact method to compute the value of a state with the given weights vector
+	 * @param ns The state after the move is taken
+	 * @param weights The weights vector given
+     * @return the value of the state based on the features and weights
+     */
+	public double valueOfState(NextState ns, double[] weights) {
+		if (weights.length != NUM_OF_FEATURE) throw new IllegalArgumentException("Weights vector not matching size");
+		double result = 0;
+		double[] features = computeFeaturesVector(ns);
+		for (int i = 0; i < NUM_OF_FEATURE; i++) {
+			result += features[i] * weights[i];
+		}
+
+		return result;
 	}
 
 }
