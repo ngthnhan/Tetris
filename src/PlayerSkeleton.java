@@ -10,7 +10,7 @@ public class PlayerSkeleton {
 	public NextState nextState ;
 	public FeatureFunction ff;
 	private double[] weights;
-	double GAMMA = 0.95f;
+	double GAMMA = 0.9f;
 	private final double MIN_VAL = Double.NEGATIVE_INFINITY;
 	private final boolean DEBUG = true;
 	private final boolean LEARNING = false;
@@ -95,14 +95,21 @@ public class PlayerSkeleton {
 	}
 
 	public void learning(double[] features, double[] nextStateFeatures, double num){
-		double[][] rowNextStateFeatures = matrix.convertToRowVector(nextStateFeatures);
-		rowNextStateFeatures = matrix.multiplyByConstant(rowNextStateFeatures, GAMMA);
-		double[][] rowFeatures = matrix.convertToRowVector(features);
-		rowNextStateFeatures = matrix.matrixSub(rowFeatures, rowNextStateFeatures);
-		double[][] tempA = matrix.matrixMultplx(matrix.convertToColumnVector(features), rowNextStateFeatures);
-		A = matrix.matrixAdd(A, tempA);
-		b = matrix.matrixAdd(b, matrix.multiplyByConstant(matrix.convertToColumnVector(features),num));
-		tempA = matrix.matrixMultplx(matrix.matrixInverse(A),b);
+		// Just using the matrix operations to implement 2 formulas mentioned in LSPI handout
+		double[][] tempA;
+		try{
+			double[][] rowNextStateFeatures = matrix.convertToRowVector(nextStateFeatures);
+			rowNextStateFeatures = matrix.multiplyByConstant(rowNextStateFeatures,GAMMA);
+			double[][] rowFeatures = matrix.convertToRowVector(features);
+			rowNextStateFeatures = matrix.matrixSub(rowFeatures, rowNextStateFeatures);
+			tempA = matrix.matrixMultplx(matrix.convertToColumnVector(features), rowNextStateFeatures);
+			A = matrix.matrixAdd(A, tempA);
+			b = matrix.matrixAdd(b, matrix.multiplyByConstant(matrix.convertToColumnVector(features),num));
+			tempA = matrix.matrixMultplx(matrix.matrixInverse(A),b);
+		}
+		catch(Exception e){
+			return;
+		}
 		weights = matrix.convertToArray(tempA);
 	}
 	

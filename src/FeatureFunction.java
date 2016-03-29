@@ -224,13 +224,20 @@ public class FeatureFunction {
 		for (int i = 0; i < State.COLS; i++) {
 			for (int j = 0; j < State.ROWS; j++) {
 				// FIXME: Boundary checking when j = 0
+				try{
 				if ((field[i][j] == 1)
 						&& ((field[i][j + 1] == 0) || (field[i][j - 1] == 0)))
 					computedValues[0]++;
+				}
+			catch(Exception e){}
 				// If a filled cell is adjacent to an empty cell in the same column, we add 1 to the column transitions
+				try{
 				if ((field[i][j] == 0) && (field[i][j + 1] == 1))
 					computedValues[1]++;
+				}
+				catch(Exception e){}
 				// If a hole is right below an filled cell, we add 1 to number of holes. This is confusing but remember that this is not hole depths but number of holes
+				try{
 				if ((j == 0 || top[j - 1] > top[j])
 						&& (j == 9 || top[j + 1] > top[j])) {
 					// We check if the adjacent columns have height greater than the current column
@@ -248,6 +255,7 @@ public class FeatureFunction {
 								* (cumulativeWell + 1) / 2;
 					// Using the formula n*(n+1)/2 to calculate cumulative well depths
 				}
+			}catch(Exception e){}
 			}
 		}
 		/*
