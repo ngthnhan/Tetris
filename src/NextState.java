@@ -8,6 +8,8 @@ public class NextState extends State {
     private int turn = 0;
     private int cleared = 0;
 
+    private int action = 0;
+
     //each square in the grid - int means empty - other values mean the turn it was placed
     private int[][] field = new int[ROWS][COLS];
     private int[] top = new int[COLS];
@@ -47,21 +49,24 @@ public class NextState extends State {
         top = Arrays.copyOf(originalState.getTop(), originalState.getTop().length);
         turn = originalState.getTurnNumber();
         cleared = originalState.getRowsCleared();
+        action = -1;
     }
 
+    public boolean hasActed() {
+        return action >= 0;
+    }
+
+    public State getOriginalState() { return originalState; }
     public int getRowsCleared() { return cleared; }
     public int[][] getField() { return field; }
     public int[] getTop() { return top; }
 
-//	public void revert() {
-//		for (int i = 0; i < originalState.getField().length; i++) {
-//			field[i] = Arrays.copyOf(originalState.getField()[i], originalState.getField()[i].length);
-//		}
-//
-//		top = Arrays.copyOf(originalState.getTop(), originalState.getTop().length);
-//		turn = originalState.getTurnNumber();
-//		cleared = originalState.getRowsCleared();
-//	}
+    public int getAction() { return action; }
+
+    public void makeMove(int move) {
+        action = move;
+        makeMove(legalMoves[nextPiece][move]);
+    }
 
     public boolean makeMove(int orient, int slot) {
         turn++;
