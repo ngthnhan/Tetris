@@ -166,9 +166,9 @@ public class FeatureFunction {
 		int[][] field = s.getField();
 		int[] top = s.getTop();
 		int maxTop = top[0];
-		int cumalativeWell;
-		for (int i = 0; i < field.length; i++) {
-			for (int j = 0; j < field[0].length; j++) {
+		int cumulativeWell;
+		for (int i = 0; i < State.COLS; i++) {
+			for (int j = 0; j < State.ROWS; j++) {
 				if ((field[i][j] == 1)
 						&& ((field[i][j + 1] == 0) || (field[i][j - 1] == 0)))
 					computedValues[0]++;
@@ -177,18 +177,18 @@ public class FeatureFunction {
 				if ((j == 0 || top[j - 1] > top[j])
 						&& (j == 9 || top[j + 1] > top[j])) {
 					if (j == 0) {
-						cumalativeWell = top[1] - top[0];
-						computedValues[2] += cumalativeWell
-								* (cumalativeWell + 1) / 2;
+						cumulativeWell = top[1] - top[0];
+						computedValues[2] += cumulativeWell
+								* (cumulativeWell + 1) / 2;
 					} else if (j == 9) {
-						cumalativeWell = top[8] - top[9];
-						computedValues[2] += cumalativeWell
-								* (cumalativeWell + 1) / 2;
+						cumulativeWell = top[8] - top[9];
+						computedValues[2] += cumulativeWell
+								* (cumulativeWell + 1) / 2;
 					} else {
-						cumalativeWell = Math.min(top[j - 1], top[j + 1])
+						cumulativeWell = Math.min(top[j - 1], top[j + 1])
 								- top[j];
-						computedValues[2] += cumalativeWell
-								* (cumalativeWell + 1) / 2;
+						computedValues[2] += cumulativeWell
+								* (cumulativeWell + 1) / 2;
 					}
 				}
 			}
@@ -221,6 +221,7 @@ public class FeatureFunction {
 
 		for (int i = 0; i < s.COLS; i++) {
 			holeDetected = false;
+			// Only go as high as the column height
 			for (int j = 0; j < top[i]; j++) {
 				// Flag if a hole is detected in the column
 				if(s.getField()[j][i] == 0)
@@ -269,8 +270,8 @@ public class FeatureFunction {
 		// complexity is not O(n^4), as all the array lenghts are fixed
 
 		// For each column
-		for (int i = 0; i < top.length - 1; i++) {
-			// For each possible piece
+		for (int i = 0; i < State.COLS - 1; i++) {
+			// For each different piece
 			for (int j = 0; j < pBottom.length; j++) {
 				pieceFitsFlag = false;
 				// For each rotation
