@@ -240,23 +240,19 @@ public class FeatureFunction {
 
 	// Implementation of f8: row hole count
 	public int features8(State s) {
-		int finalValue = 0, filled = 0, nonFilled = 0;
+		int finalValue = 0;
 
+		int[] top = s.getTop();
 		for (int i = 0; i < s.ROWS; i++) {
 			for (int j = 0; i < s.COLS; j++) {
-
-				if (s.getField()[i][j] != 0) {
-					filled++;
-				}else{
-					nonFilled++;
+				// Skip if above top of column
+				if(i > top[j]) continue;
+				// If a hole is found, count row and jump to next row
+				if (s.getField()[i][j] == 0) {
+					finalValue++;
+					break;
 				}
-
 			}
-			if(filled != 0 && nonFilled != 0){
-				finalValue++;
-			}
-			filled =0;
-			nonFilled= 0;
 		}
 
 		return finalValue;
