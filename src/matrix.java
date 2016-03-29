@@ -9,7 +9,7 @@ public class matrix {
      * @param B input matrix
      * @return the new matrix resultMatrix
      */
-    public static Double [][] matrixMultplx(Double [][] A, Double [][]B){
+    public static double [][] matrixMultplx(double [][] A, double [][]B){
         int aRows = A.length;
         int aCols = A[0].length;
         int bRows = B.length;
@@ -18,7 +18,7 @@ public class matrix {
             throw new IllegalArgumentException("The first matrix's rows is not equal to the second matrix's columns, cannot perform matrix multiplication");
         }
         else{
-            Double [][] resultMatrix = new Double [aRows][bCols];
+            double [][] resultMatrix = new double [aRows][bCols];
             for (int i = 0; i < aRows; i++) {
                 for (int j = 0; j < bCols; j++) {
                     resultMatrix[i][j] = 0.00000;
@@ -57,7 +57,7 @@ public class matrix {
      * @param c either '-' or '+'
      * @return output matrix of this addition
      */
-    public static Double[][] matrixAddition(Double[][] A, Double[][] B, char c) {
+    public static double[][] matrixAddition(double[][] A, double[][] B, char c) {
         int aRows = A.length;
         int aCols = A[0].length;
         int bRows = B.length;
@@ -65,7 +65,7 @@ public class matrix {
         if (aRows != bRows || aCols !=bCols ) {
             throw new IllegalArgumentException("both input matrix needs to be in the same format");
         }
-        Double [][] resultmatrix = new Double [aRows][aCols];
+        double [][] resultmatrix = new double [aRows][aCols];
         for ( int i = 0 ; i < aRows ; i++ ) {
             for (int j = 0; j < aCols; j++) {
                 if(c== '+'){
@@ -83,12 +83,12 @@ public class matrix {
     }
 
     //Matrix addition. A add B
-    public static Double[][] matrixAdd(Double[][] A, Double[][] B) {
+    public static double[][] matrixAdd(double[][] A, double[][] B) {
         return matrixAddition(A,B,'+');
     }
 
     //Matrix substitution. A minus B
-    public static Double[][] matrixSub(Double[][] A, Double[][] B) {
+    public static double[][] matrixSub(double[][] A, double[][] B) {
         return matrixAddition(A,B,'-');
     }
 
@@ -100,10 +100,10 @@ public class matrix {
      * @param exclude_col excluding column
      * @return the new matrix resultMatrix
      */
-    public static Double [][] createSubMatrix(Double [][] M, int exclude_row, int exclude_col) {
+    public static double [][] createSubMatrix(double [][] M, int exclude_row, int exclude_col) {
         int mRows = M.length;
         int mCols = M[0].length;
-        Double[][] resultMatrix = new Double[mRows - 1][mCols - 1];
+        double[][] resultMatrix = new double[mRows - 1][mCols - 1];
         int resultMatrixRow = 0;
 
         for (int i = 0; i < mRows; i++) {
@@ -131,7 +131,7 @@ public class matrix {
      * @return the determinant
      * @throws IllegalArgumentException
      */
-    public static double determinant(Double [][] M) throws IllegalArgumentException {
+    public static double determinant(double [][] M) throws IllegalArgumentException {
         int aRows = M.length;
         int aCols = M[0].length;
         double sum = 0.0;
@@ -169,10 +169,10 @@ public class matrix {
      * @return the Adjugate matrix called resultMatrix
      * @throws IllegalArgumentException
      */
-    public static Double [][] matrixAdjugate(Double[][] M) throws IllegalArgumentException{
+    public static double [][] matrixAdjugate(double[][] M) throws IllegalArgumentException{
         int mRows = M.length;
         int mCols = M[0].length;
-        Double [][] resultMatrix = new Double [mRows][mCols];
+        double [][] resultMatrix = new double [mRows][mCols];
 
         for (int i=0;i<mRows;i++) {
             for (int j=0; j<mCols;j++) {
@@ -187,7 +187,7 @@ public class matrix {
     /**
      * Add constant c to every element in the matrix M
      */
-    private static Double[][] multiplyByConstant(Double[][] M, double c) {
+    public static double[][] multiplyByConstant(double[][] M, double c) {
         int mRows = M.length;
         int mCols = M[0].length;
         for(int i = 0; i < mRows; i++){
@@ -201,11 +201,35 @@ public class matrix {
     /**
      * Return the Inverse of the matrix
      */
-    public static Double [][] matrixInverse(Double [][] M) throws IllegalArgumentException {
+    public static double [][] matrixInverse(double [][] M) throws IllegalArgumentException {
         if(determinant(M)==0){
             throw new IllegalArgumentException("The determinant is Zero, the matrix doesn't have an inverse");
         }
         return (multiplyByConstant(matrixAdjugate(M), 1.0/determinant(M)));
+    }
+
+    public static double [][] convertToRowVector(double[] singleArray){
+    	double[][] rowVector = new double[1][singleArray.length];
+    	for(int i=0;i<singleArray.length;i++) {
+    		rowVector[0][i]=singleArray[i];
+    	}
+    	return rowVector;
+    }
+
+    public static double [][] convertToColumnVector(double[] singleArray){
+    	double[][] columnVector = new double[singleArray.length][1];
+    	for(int i=0;i<singleArray.length;i++) {
+    		columnVector[i][0]=singleArray[i];
+    	}
+    	return columnVector;
+    }
+
+    public static double[] convertToArray(double[][] myMatrix){
+    	double[] myArray = new double[myMatrix.length];
+    	for(int i=0;i<myMatrix.length;i++) {
+    		myArray[i]=myMatrix[i][0];
+    	}
+    	return myArray;
     }
 
 }
