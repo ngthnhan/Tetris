@@ -81,10 +81,10 @@ public class PlayerSkeleton {
 				bestFeatures = currentFeatures;
 			}
 		}
-		nextState.copyState(s);
+/*		nextState.copyState(s);
 		currentFeatures = ff.computeFeaturesVector(nextState);
 		learning(currentFeatures,bestFeatures,num);
-		if (DEBUG) {
+*/		if (DEBUG) {
 			printFeatures(bestFeatures);
 		}
 		/*
