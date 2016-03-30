@@ -1,3 +1,5 @@
+import com.sun.org.apache.xalan.internal.utils.FeatureManager;
+
 import java.io.*;
 import java.util.Random;
 import java.util.Scanner;
@@ -13,8 +15,10 @@ public class Learner implements Runnable {
     private State s;
     private State ns;
     private PlayerSkeleton p;
+    private FeatureFunction ff;
     private final int LOST_REWARD = -1000000;
     private final int INFINITE = -1;
+    private final double GAMMA = 0.9;
 
     private final String LEARNER_DIR = "Learner";
 
@@ -29,6 +33,9 @@ public class Learner implements Runnable {
 
         this.s = new State();
         this.ns = new NextState(s);
+
+        this.p = new PlayerSkeleton();
+        this.ff = new FeatureFunction();
     }
 
     private void readWeightsVector() {
@@ -117,14 +124,14 @@ public class Learner implements Runnable {
             double[][] temp = new double[1][FeatureFunction.NUM_OF_FEATURE];
             nextState.copyState(s);
             nextState.makeMove(action);
-            double[][] currentFeatures = matrix.convertToRowVector(FeatureFunction.computeFeaturesVector(nextState));
+            double[][] currentFeatures = matrix.convertToRowVector(ff.computeFeaturesVector(nextState));
             for (int nextStatePiece = 0; nextStatePiece < 7; nextStatePiece++)
             {
-                nextState.setPiece(nextStatePiece);
-                nextAction = pickBestMove(nextState, weights);
+                nextState.setNextPiece(nextStatePiece);
+                nextAction = PlayerSkeleton.pickBestMove(nextState, weights);
                 nextNextState.copyState(nextState);
                 nextNextState.makeMove(nextAction);
-                temp = matrix.convertToRowVector(FeatureFunction.computeFeaturesVector(nextNextState));
+                temp = matrix.convertToRowVector(ff.computeFeaturesVector(nextNextState));
                 summation = matrix.matrixAdd(summation, matrix.multiplyByConstant(temp, GAMMA*P(s, action, nextState)));
                 computeSumForB += P(s, action, nextState)*R(s, action, nextState);
             }
@@ -135,7 +142,7 @@ public class Learner implements Runnable {
         }
         tempA = matrix.matrixMultplx(matrix.matrixInverse(A),b);
         weights = matrix.convertToArray(tempA);
-        return null;
+        return weights;
     }
 
     /**
@@ -175,9 +182,29 @@ public class Learner implements Runnable {
         File dir = new File(LEARNER_DIR);
         double[] finalWeights = new double[K];
 
+        int count = 0;
+        try {
+            for (File w: dir.listFiles()) {
+                Scanner sc = new Scanner(w);
+                count++;
+                for (int i = 0; i < K; i++) {
+                    finalWeights[i] += sc.nextDouble();
+                }
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
 
-        for (File w: dir.listFiles()) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(dir.getAbsolutePath() + "final_weights.txt"))){
+            StringBuffer sb = new StringBuffer();
+            for (double w: finalWeights) {
+                sb.append(w);
+                sb.append('\n');
+            }
 
+            bw.write(sb.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
