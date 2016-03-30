@@ -105,12 +105,36 @@ public class Learner implements Runnable {
         double[][] A = new double[K][K]; // Refer to algo on page 19
         double[][] b = new double[K][1];
         double[][] phi = new double[K][1];
+        double[][] tempA;
+        NextState nextState = new NextState();
+        NextState nextNextState = new NextState();
+        int nextAction;
 
         for (int action = 0; action < s.legalMoves().length; action++) {
             // A = A + phi(s,a)*transpose(phi(s,a) - GAMMA * sum(P(s,a,s')*phi(s', pi(s')))
-
+            double[][] summation = new double[1][FeatureFunction.NUM_OF_FEATURE];
+            double computeSumForB=0;
+            double[][] temp = new double[1][FeatureFunction.NUM_OF_FEATURE];
+            nextState.copyState(s);
+            nextState.makeMove(action);
+            double[][] currentFeatures = matrix.convertToRowVector(FeatureFunction.computeFeaturesVector(nextState));
+            for (int nextStatePiece = 0; nextStatePiece < 7; nextStatePiece++)
+            {
+                nextState.setPiece(nextStatePiece);
+                nextAction = pickBestMove(nextState, weights);
+                nextNextState.copyState(nextState);
+                nextNextState.makeMove(nextAction);
+                temp = matrix.convertToRowVector(FeatureFunction.computeFeaturesVector(nextNextState));
+                summation = matrix.matrixAdd(summation, matrix.multiplyByConstant(temp, GAMMA*P(s, action, nextState)));
+                computeSumForB += P(s, action, nextState)*R(s, action, nextState);
+            }
+            summation = matrix.matrixSub(currentFeatures, summation);
+            tempA = matrix.matrixMultplx(matrix.transpose(currentFeatures), summation);
+            A = matrix.matrixAdd(A, tempA);
+            b = matrix.matrixAdd(b, matrix.multiplyByConstant(matrix.transpose(currentFeatures), computeSumForB));
         }
-
+        tempA = matrix.matrixMultplx(matrix.matrixInverse(A),b);
+        weights = matrix.convertToArray(tempA);
         return null;
     }
 
