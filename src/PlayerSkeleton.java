@@ -55,6 +55,39 @@ public class PlayerSkeleton {
 		System.out.println("No of move accommodated: 	" + features[9]);
 	}
 
+
+	/**
+	 * This function takes in a state and policy (weights vector) and
+	 * evaluate the best move
+	 * @param s
+	 * @param w
+     * @return
+     */
+	public static int pickBestMove(State s, double[] w) {
+		int bestMove=0, currentMove;
+		double bestValue = MIN_VAL, currentValue;
+		NextState ns = new NextState();
+		FeatureFunction ff = new FeatureFunction(); // May want to use singleton to optimize
+
+		for (currentMove = 0; currentMove < s.legalMoves().length; currentMove++)
+		{
+			ns.copyState(s);
+			ns.makeMove(currentMove);
+
+			if (ns.hasLost()) continue; // Ignore move if it is a lost move
+
+			currentValue = ff.valueOfState(ns, w);
+			if (currentValue > bestValue) {
+				bestMove = currentMove;
+				bestValue = currentValue;
+			}
+		}
+
+		return bestMove;
+	}
+
+
+
 	public int pickMove(State s, int[][] legalMoves) {
 		
 		int bestMove=0, currentMove;
@@ -81,9 +114,9 @@ public class PlayerSkeleton {
 				bestFeatures = currentFeatures;
 			}
 		}
-		nextState.copyState(s);
-		currentFeatures = ff.computeFeaturesVector(nextState);
-		learning(currentFeatures,bestFeatures,num);
+//		nextState.copyState(s);
+//		currentFeatures = ff.computeFeaturesVector(nextState);
+//		learning(currentFeatures,bestFeatures,num);
 		if (DEBUG) {
 			printFeatures(bestFeatures);
 		}
