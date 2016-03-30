@@ -60,8 +60,10 @@ public class NextState extends State {
     public int getRowsCleared() { return cleared; }
     public int[][] getField() { return field; }
     public int[] getTop() { return top; }
-
     public int getAction() { return action; }
+
+    public int getNextPiece() { return this.nextPiece; }
+    public void setNextPiece(int next) { this.nextPiece = next; }
 
     public void makeMove(int move) {
         action = move;

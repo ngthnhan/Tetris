@@ -9,7 +9,12 @@ public class Learner implements Runnable {
     private int id;
     private int turnLimit;
     private String weightFile;
+    private State s;
+    private State ns;
+    private PlayerSkeleton p;
+    private final int LOST_REWARD = -1000000;
 
+    private final int K = FeatureFunction.NUM_OF_FEATURE;
 
     public Learner(int id, int turnLimit) {
         this.id = id;
@@ -17,6 +22,9 @@ public class Learner implements Runnable {
         this.weightFile = String.format("weight%d.txt", id);
         weights = new double[FeatureFunction.NUM_OF_FEATURE];
         readWeightsVector();
+
+        this.s = new State();
+        this.ns = new NextState(s);
     }
 
     private void readWeightsVector() {
@@ -27,7 +35,7 @@ public class Learner implements Runnable {
                 weights[i++] = sc.nextDouble();
             }
         } catch (IOException e) {
-
+            e.printStackTrace();
         }
     }
 
@@ -38,16 +46,74 @@ public class Learner implements Runnable {
                 bw.write('\n');
             }
         } catch (IOException e) {
-
+            e.printStackTrace();
         }
     }
+
+    /**
+     * Mainly a pseudo function so that it resembles the algorithm given in handout
+     * @param s
+     * @param action
+     * @param ns
+     * @return mostly 1.0 / 7 if we assume that the randomness to non-biased
+     */
+    private double P(State s, int action, State ns) {
+        return 0.14285714285; // 1.0 / 7
+    }
+
+    /**
+     * Reward function.
+     * @param s
+     * @param action
+     * @param ns
+     * @return Number of lines cleared. -100000 if the action is a lost move
+     */
+    private double R(State s, int action, State ns) {
+        return ns.hasLost() ? LOST_REWARD : ns.getRowsCleared() - s.getRowsCleared();
+    }
+
+    /**
+     * This is to learn for every sample (s, a, s'). Adjust the weight vector
+     *
+     * phi(s,a) : features of state. It is a col vector size K x 1
+     * P(s,a,s') : transition model from s, a to s'
+     * phi(s', pi(s')) : features of the state after action is taken and pick the best based
+     *                   on the current policy (1 step look ahead)
+     * @return the adjusted weight vector given the sample
+     */
+    private double[] LSTDQ(NextState s) {
+        double[][] A = new double[K][K]; // Refer to algo on page 19
+        double[][] b = new double[K][1];
+        double[][] phi = new double[K][1];
+
+        for (int action = 0; action < s.legalMoves().length; action++) {
+            // A = A + phi(s,a)*transpose(phi(s,a) - GAMMA * sum(P(s,a,s')*phi(s', pi(s')))
+
+        }
+
+        return null;
+    }
+
+    /**
+     * This is mainly the wrapper to continuously iterate through samples and give it
+     * to LSTDQ to adjust the weight.
+     * The way we do it is by randomly pick a move for a given state to make new sample.
+     *
+     * @return the adjusted weight after the whole learning process
+     */
+    private double[] LSPI() {
+
+        return null;
+    }
+
 
     @Override
     public void run() {
         // TODO: Learning process
         try {
             int turn = 0;
-            while (turn < turnLimit) {
+            boolean infinite = turnLimit < 0;
+            while (infinite || turn < turnLimit) {
 
                 turn++;
             }
