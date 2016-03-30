@@ -38,10 +38,10 @@ public class matrix {
     /**
      * returns the transpose of the input matrix M
      */
-    public static Double [][] transpose(Double [][] M){
+    public static double [][] transpose(double [][] M){
         int mRows = M.length;
         int mCols = M[0].length;
-        Double [][] resultMatrix = new Double [mCols][mRows];
+        double [][] resultMatrix = new double [mCols][mRows];
         for(int i = 0; i < mRows; i++){
             for(int j = 0; j < mCols; j++){
                 resultMatrix[j][i] = M[i][j];
