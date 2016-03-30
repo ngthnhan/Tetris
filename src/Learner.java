@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.Random;
 import java.util.Scanner;
 
 /**
@@ -13,6 +14,9 @@ public class Learner implements Runnable {
     private State ns;
     private PlayerSkeleton p;
     private final int LOST_REWARD = -1000000;
+    private final int INFINITE = -1;
+
+    private final String LEARNER_DIR = "Learner";
 
     private final int K = FeatureFunction.NUM_OF_FEATURE;
 
@@ -35,7 +39,23 @@ public class Learner implements Runnable {
                 weights[i++] = sc.nextDouble();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                // Randomise weights
+                Random rdm = new Random();
+                for (int i = 0; i < FeatureFunction.NUM_OF_FEATURE; i++) {
+                    double w = rdm.nextDouble();
+                    weights[i] = rdm.nextBoolean() ? w : -w;
+                }
+
+                // Create file if not exists
+                File file = new File(weightFile);
+
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+            } catch (IOException f) {
+                f.printStackTrace();
+            }
         }
     }
 
@@ -121,6 +141,28 @@ public class Learner implements Runnable {
         } finally {
             // Interrupted or finish learning. Writing back weights
             writeWeightsVector();
+        }
+    }
+
+    /**
+     * Map reducer function to consolidate learning from the learners.
+     */
+    public static void consolidateLearning() {
+        File dir = new File(LEARNER_DIR);
+        double[] finalWeights = new double[K];
+
+
+        for (File w: dir.listFiles()) {
+
+        }
+    }
+
+    public static void main(String[] args) {
+        int numOfLearners = args.length >= 1 && args[0] != null ? Integer.parseInt(args[0]) : 4;
+        int limit = args.length >= 2 && args[1] != null ? Integer.parseInt(args[1]) : -1;
+
+        for (int i = 0; i < numOfLearners; i++) {
+            new Thread(new Learner(i, limit)).start();
         }
     }
 }
