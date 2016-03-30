@@ -11,7 +11,7 @@ public class PlayerSkeleton {
 	public FeatureFunction ff;
 	private double[] weights;
 	double GAMMA = 0.9f;
-	private final double MIN_VAL = Double.NEGATIVE_INFINITY;
+	private final static double MIN_VAL = Double.NEGATIVE_INFINITY;
 	private final boolean DEBUG = true;
 	private final boolean LEARNING = false;
 	double[][] A = new double[FeatureFunction.NUM_OF_FEATURE][FeatureFunction.NUM_OF_FEATURE];
@@ -114,7 +114,17 @@ public class PlayerSkeleton {
 				bestFeatures = currentFeatures;
 			}
 		}
+		nextState.copyState(s);
+		nextState.makeMove(bestMove);
 		if (DEBUG) {
+			/*
+			int[][] field = nextState.getField();
+			for (int i = 0; i < State.ROWS; i++) {
+			for (int j = 0; j < State.COLS; j++){
+				System.out.print(field[i][j]);
+			}
+			System.out.println();
+		}*/
 			printFeatures(bestFeatures);
 		}
 		/*

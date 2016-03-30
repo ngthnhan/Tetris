@@ -215,24 +215,24 @@ public class FeatureFunction {
 	 * column height
 	 */
 	public void features456(State s, double[] featuresVector) {
-		double[] computedValues = new double[23];
+		double[] computedValues = new double[3];
 		Arrays.fill(computedValues, 0);
 		int[][] field = s.getField();
 		int[] top = s.getTop();
 		int maxTop = top[0];
 		int cumulativeWell;
-		for (int i = 0; i < State.COLS; i++) {
-			for (int j = 0; j < State.ROWS; j++) {
+		for (int i = 0; i < State.ROWS; i++) {
+			for (int j = 0; j < State.COLS; j++) {
 				// FIXME: Boundary checking when j = 0
 				try{
-				if ((field[i][j] == 1)
-						&& ((field[i][j + 1] == 0) || (field[i][j - 1] == 0)))
+				if ((field[i][j] != 0)
+						&& ((field[i+1][j] == 0) || (field[i-1][j] == 0)))
 					computedValues[0]++;
 				}
 			catch(Exception e){}
 				// If a filled cell is adjacent to an empty cell in the same column, we add 1 to the column transitions
 				try{
-				if ((field[i][j] == 0) && (field[i][j + 1] == 1))
+				if ((field[i][j] == 0) && (field[i+1][j] != 0))
 					computedValues[1]++;
 				}
 				catch(Exception e){}
