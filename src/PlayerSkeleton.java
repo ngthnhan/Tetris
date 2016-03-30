@@ -10,8 +10,12 @@ public class PlayerSkeleton {
 	public NextState nextState ;
 	public FeatureFunction ff;
 	private double[] weights;
+	double GAMMA = 0.9f;
 	private final double MIN_VAL = Double.NEGATIVE_INFINITY;
 	private final boolean DEBUG = true;
+	private final boolean LEARNING = false;
+	double[][] A = new double[FeatureFunction.NUM_OF_FEATURE][FeatureFunction.NUM_OF_FEATURE];
+	double[][] b = new double[FeatureFunction.NUM_OF_FEATURE][1]; 
 
 	public PlayerSkeleton(){
 		nextState = new NextState();
@@ -54,7 +58,7 @@ public class PlayerSkeleton {
 	public int pickMove(State s, int[][] legalMoves) {
 		
 		int bestMove=0, currentMove;
-		double bestValue = MIN_VAL, currentValue;
+		double bestValue = MIN_VAL, currentValue, num=0;
 		double[] bestFeatures = new double[FeatureFunction.NUM_OF_FEATURE], currentFeatures;
 
 		// Copy the state before trying the moves
@@ -73,10 +77,13 @@ public class PlayerSkeleton {
 			if (currentValue > bestValue) {
 				bestMove = currentMove;
 				bestValue = currentValue;
+				num = nextState.getRowsCleared() - s.getRowsCleared();
 				bestFeatures = currentFeatures;
 			}
 		}
-
+		nextState.copyState(s);
+		currentFeatures = ff.computeFeaturesVector(nextState);
+		learning(currentFeatures,bestFeatures,num);
 		if (DEBUG) {
 			printFeatures(bestFeatures);
 		}
@@ -85,6 +92,25 @@ public class PlayerSkeleton {
 		*/
 
 		return bestMove;
+	}
+
+	public void learning(double[] features, double[] nextStateFeatures, double num){
+		// Just using the matrix operations to implement 2 formulas mentioned in LSPI handout
+		double[][] tempA;
+		try{
+			double[][] rowNextStateFeatures = matrix.convertToRowVector(nextStateFeatures);
+			rowNextStateFeatures = matrix.multiplyByConstant(rowNextStateFeatures,GAMMA);
+			double[][] rowFeatures = matrix.convertToRowVector(features);
+			rowNextStateFeatures = matrix.matrixSub(rowFeatures, rowNextStateFeatures);
+			tempA = matrix.matrixMultplx(matrix.convertToColumnVector(features), rowNextStateFeatures);
+			A = matrix.matrixAdd(A, tempA);
+			b = matrix.matrixAdd(b, matrix.multiplyByConstant(matrix.convertToColumnVector(features),num));
+			tempA = matrix.matrixMultplx(matrix.matrixInverse(A),b);
+		}
+		catch(Exception e){
+			return;
+		}
+		weights = matrix.convertToArray(tempA);
 	}
 	
 	public static void main(String[] args) {
