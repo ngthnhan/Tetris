@@ -343,14 +343,15 @@ public class FeatureFunction {
 	// Implementation of f8: row hole count
 	public int features8(State s) {
 		int finalValue = 0;
-
+		int[][] field = s.getField();
 		int[] top = s.getTop();
+
 		for (int i = 0; i < s.ROWS; i++) {
 			for (int j = 0; j < s.COLS; j++) {
 				// Skip if above top of column
-				if(i > top[j]) continue;
+				if(i >= top[j]) continue;
 				// If a hole is found, count row and jump to next row
-				if (s.getField()[i][j] == 0) {
+				if (field[i][j] == 0) {
 					finalValue++;
 					break;
 				}
