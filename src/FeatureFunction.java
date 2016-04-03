@@ -100,7 +100,11 @@ public class FeatureFunction {
 
 		// Calling feature 4 5 6 and assign correct values
 		//features456(nextStage);
+		int[] features45Return = features45(nextStage);
+		featuresVector[F4] = features45Return[0];
+		featuresVector[F5] = features45Return[1];
 
+		featuresVector[F6] = feature6(nextStage);
 		featuresVector[F7] = features7(nextStage);
 		featuresVector[F8] = features8(nextStage);
 
@@ -122,16 +126,16 @@ public class FeatureFunction {
 		features[F3] = getRowTransition(ns);
 
 		// TODO: Implement such that this function returns 3 values into features.
-		// double[] results456 = features456(ns)
-		// features[F4] = results456[0];
-		// features[F5] = results456[1];
-		// featuers[F6] = results456[2]
+		 int[] results45 = features45(ns);
+		 features[F4] = results45[0];
+		 features[F5] = results45[1];
 		// or param passing
 		// features456(ns, features);
 		//features456(ns);
 
-		features456(ns, features);
+//		features456(ns, features);
 
+		features[F6] = feature6(ns);
 		features[F7] = features7(ns);
 		features[F8] = features8(ns);
 
@@ -206,7 +210,39 @@ public class FeatureFunction {
         return transCount;
     }
 
-    // Implementation of f4
+    // Implementation of f4, f5 and 6
+	public int[] features45(State s) {
+		int[][] field = s.getField();
+		int[] top = s.getTop();
+		// Feature 4 result:
+		int columnTransitions = 0;
+		// Feature 5 result:
+		int holes = 0;
+		boolean columnDone = false;
+
+		// Traverse each column
+		for (int i = 0; i < State.COLS; i++) {
+			// Traverse each row until the second highest
+			for (int j = 0; j < State.ROWS - 1; j++) {
+				// Feature 4: Count any differences in adjacent rows
+				if (field[j][i] != field[j+1][i])
+					columnTransitions++;
+				// Feature 5: Count any empty cells directly under a filled cell
+				if ((field[j][i] == 0) && (field[j+1][i] > 0))
+					holes++;
+				// Break if rest of column is empty
+				if(j >= top[i])
+					columnDone = true;
+			}
+			if(columnDone)
+				continue;
+		}
+
+		int[] results = {columnTransitions, holes};
+		return results;
+	}
+
+	// Implementation of f5
 
 	/*
 	 * Also implemented features 1-20 mentioned in the handout Index Labels:
@@ -214,7 +250,7 @@ public class FeatureFunction {
 	 * 11 - Consecutive well depths 12 to 21 - Column Heights 22 - Maximum
 	 * column height
 	 */
-	public void features456(State s, double[] featuresVector) {
+/*	public void features456(State s, double[] featuresVector) {
 		double[] computedValues = new double[23];
 		Arrays.fill(computedValues, 0);
 		int[][] field = s.getField();
@@ -223,21 +259,6 @@ public class FeatureFunction {
 		int cumulativeWell;
 		for (int i = 0; i < State.COLS; i++) {
 			for (int j = 0; j < State.ROWS; j++) {
-				// FIXME: Boundary checking when j = 0
-				try{
-				if ((field[i][j] == 1)
-						&& ((field[i][j + 1] == 0) || (field[i][j - 1] == 0)))
-					computedValues[0]++;
-				}
-			catch(Exception e){}
-				// If a filled cell is adjacent to an empty cell in the same column, we add 1 to the column transitions
-				try{
-				if ((field[i][j] == 0) && (field[i][j + 1] == 1))
-					computedValues[1]++;
-				}
-				catch(Exception e){}
-				// If a hole is right below an filled cell, we add 1 to number of holes. This is confusing but remember that this is not hole depths but number of holes
-				try{
 				if ((j == 0 || top[j - 1] > top[j])
 						&& (j == 9 || top[j + 1] > top[j])) {
 					// We check if the adjacent columns have height greater than the current column
@@ -252,32 +273,50 @@ public class FeatureFunction {
 						cumulativeWell = Math.min(top[j - 1], top[j + 1]) - top[j];
 					}
 					computedValues[2] += cumulativeWell
-								* (cumulativeWell + 1) / 2;
+							* (cumulativeWell + 1) / 2;
 					// Using the formula n*(n+1)/2 to calculate cumulative well depths
 				}
-			}catch(Exception e){}
 			}
-		}
-		/*
-		for (int j = 0; j < State.ROWS; j++) {
-			if (j != (State.ROWS - 1))
-				computedValues[3 + j] = top[j] - top[j + 1];
-			if (maxTop < top[j])
-				maxTop = top[j];
-			computedValues[12 + j] = top[j];
-		}
-		computedValues[22] = maxTop;*/
 
-		// TODO: Change the computedValues to use featuresVector
-		featuresVector[F4] = computedValues[0];
-		featuresVector[F5] = computedValues[1];
-		featuresVector[F6] = computedValues[2];
-		return;
+//			for (int j = 0; j < State.ROWS; j++) {
+//				if (j != (State.ROWS - 1))
+//					computedValues[3 + j] = top[j] - top[j + 1];
+//				if (maxTop < top[j])
+//					maxTop = top[j];
+//				computedValues[12 + j] = top[j];
+//			}
+//			computedValues[22] = maxTop;
+
+			// TODO: Change the computedValues to use featuresVector
+			featuresVector[F4] = computedValues[0];
+			featuresVector[F5] = computedValues[1];
+			featuresVector[F6] = computedValues[2];
+			return;
+		}
 	}
-
-	// Implementation of f5
-
+*/
 	// Implementation of f6
+
+	public int feature6(State s)
+	{
+		int[] top = s.getTop();
+		int cumulativeWells = 0;
+
+		for (int i = 0; i < State.COLS; i++){
+			// Feature 6:
+			// Make sure array doesn't go out of bounds
+			int prevCol = i == 0 ? State.ROWS : top[i - 1];
+			int nextCol = i == State.COLS - 1 ? State.ROWS : top[i + 1];
+
+			// Find depth of well
+			int wellDepth = Math.min(prevCol, nextCol) - top[i];
+			// If number is positive, there is a well. Calculate cumulative well depth
+			if(wellDepth > 0)
+				cumulativeWells += wellDepth * (wellDepth + 1) / 2;
+		}
+
+		return cumulativeWells;
+	}
 
 	// Implementation of f7: counting hole depth
 	public int features7(State s) {
