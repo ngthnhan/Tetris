@@ -192,13 +192,17 @@ public class FeatureFunction {
     int getRowTransition(State s) {
         int transCount = 0;
 		int[][] field = s.getField();
+		int[] top = s.getTop();
+		int edgeHeight = Math.max(top[0], top[State.COLS-1]);
 
 		// Traverse all rows
         for (int i = 0; i < State.ROWS - 1; i++) {
-			// TODO: | Discuss whether it's really necessary to
-			// TODO: | count the walls all the way to the top
-            if(field[i][0] == 0) transCount++;
-            if(field[i][State.COLS-1] == 0) transCount++;
+			// Count empty edge as row transition, if not higher than highest edge
+			if(i < edgeHeight) {
+				if (field[i][0] == 0) transCount++;
+				if (field[i][State.COLS - 1] == 0) transCount++;
+			}
+
 			// Count all row transitions
             for(int j=1;j<State.COLS;j++) {
                 if (isDifferent(field[i][j], field[i][j-1])) {
@@ -206,7 +210,7 @@ public class FeatureFunction {
                 }
             }
         }
-		
+
         return transCount;
     }
 
@@ -308,12 +312,14 @@ public class FeatureFunction {
 		return finalValue;
 	}
 
-	// Implementation of f9
+	// Implementation of f9 and f10
 
 	public int[] features910(State s) {
 		int[] top = s.getTop();
 		int[][][] pBottom = State.getpBottom();
+		// Feature 9 result:
 		int totalAcc = 0;
+		// Feature 10 result:
 		int uniqueAcc = 0;
 		boolean[] pieceFitsFlags = new boolean[State.N_PIECES];
 
@@ -357,8 +363,6 @@ public class FeatureFunction {
 		int[] ret = {uniqueAcc, totalAcc};
 		return ret;
 	}
-
-	// Implementation of f10
 
 	// Implementation of function to compute the Value of a State
 	public double valueOfState(double[] computedValues, double[] weights) {
