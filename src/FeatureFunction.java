@@ -229,7 +229,7 @@ public class FeatureFunction {
 			// Traverse each row until the second highest
 			for (int j = 0; j < State.ROWS - 1; j++) {
 				// Feature 4: Count any differences in adjacent rows
-				if (field[j][i] != field[j+1][i])
+				if (isDifferent(field[j][i], field[j+1][i]))
 					columnTransitions++;
 				// Feature 5: Count any empty cells directly under a filled cell
 				if ((field[j][i] == 0) && (field[j+1][i] > 0))
