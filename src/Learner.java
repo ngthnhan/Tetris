@@ -24,7 +24,7 @@ public class Learner implements Runnable {
 
     private final int K = FeatureFunction.NUM_OF_FEATURE;
 
-    public Learner(int id, int turnLimit) {
+    private Learner(int id, int turnLimit) {
         this.id = id;
         this.turnLimit = turnLimit;
         this.weightFile = String.format("weight%d.txt", id);
@@ -121,7 +121,7 @@ public class Learner implements Runnable {
             // A = A + phi(s,a)*transpose(phi(s,a) - GAMMA * sum(P(s,a,s')*phi(s', pi(s')))
             double[][] summation = new double[1][FeatureFunction.NUM_OF_FEATURE];
             double computeSumForB=0;
-            double[][] temp = new double[1][FeatureFunction.NUM_OF_FEATURE];
+            double[][] temp;
             nextState.copyState(s);
             nextState.makeMove(action);
             double[][] currentFeatures = matrix.convertToRowVector(ff.computeFeaturesVector(nextState));
@@ -182,6 +182,10 @@ public class Learner implements Runnable {
 
     /**
      * Map reducer function to consolidate learning from the learners.
+     * For now it just finds the mean of all the weights.
+     *
+     * Future change: Make it a stochastic gradient ascent algorithm
+     * Get value of each state using player to critic.
      */
     public static void consolidateLearning() {
         File dir = new File(LEARNER_DIR);
@@ -196,15 +200,14 @@ public class Learner implements Runnable {
                     finalWeights[i] += sc.nextDouble();
                 }
             }
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException|NullPointerException e) {
             e.printStackTrace();
         }
 
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(dir.getAbsolutePath() + "final_weights.txt"))){
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for (double w: finalWeights) {
-                sb.append(w);
-                sb.append('\n');
+                sb.append(w).append('\n');
             }
 
             bw.write(sb.toString());
