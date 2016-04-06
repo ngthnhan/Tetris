@@ -219,8 +219,9 @@ public class Learner implements Runnable {
     public static void main(String[] args) {
         int numOfLearners = args.length >= 1 && args[0] != null ? Integer.parseInt(args[0]) : 4;
         int limit = args.length >= 2 && args[1] != null ? Integer.parseInt(args[1]) : -1;
+        int startingId = args.length >= 3 && args[2] != null ? Integer.parseInt(args[2]) : 0;
 
-        for (int i = 0; i < numOfLearners; i++) {
+        for (int i = startingId; i < startingId + numOfLearners; i++) {
             new Thread(new Learner(i, limit)).start();
         }
     }
