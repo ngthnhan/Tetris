@@ -204,10 +204,11 @@ public class matrix {
      * Return the Inverse of the matrix
      */
     public static double [][] matrixInverse(double [][] M) throws IllegalArgumentException {
-        if(determinant(M)==0){
+        double det = determinant(M);
+        if(det==0){
             throw new IllegalArgumentException("The determinant is Zero, the matrix doesn't have an inverse");
         }
-        return (multiplyByConstant(matrixAdjugate(M), 1.0/determinant(M)));
+        return (multiplyByConstant(matrixAdjugate(M), 1.0/det));
     }
 
     public static double [][] convertToRowVector(double[] singleArray){
