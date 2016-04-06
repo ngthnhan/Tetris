@@ -190,12 +190,14 @@ public class matrix {
     public static double[][] multiplyByConstant(double[][] M, double c) {
         int mRows = M.length;
         int mCols = M[0].length;
+        double [][] resultMatrix = new double [mRows][mCols];
+
         for(int i = 0; i < mRows; i++){
             for(int j = 0; j < mCols; j++){
-                M[i][j] = c*M[i][j];
+                resultMatrix[i][j] = c*M[i][j];
             }
         }
-        return M;
+        return resultMatrix;
     }
 
     /**

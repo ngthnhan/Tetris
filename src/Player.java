@@ -95,8 +95,25 @@ class Player implements Runnable {
         int limit = 0;
         boolean infinite = gameLimit < 0;
         while (infinite || limit < gameLimit) {
+            limit++;
             play();
             writeToReport(this, reportFileName);
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        int numOfPlayers = args.length >= 1 && args[0] != null ? Integer.parseInt(args[0]) : 4;
+        int limit = args.length >= 2 && args[1] != null ? Integer.parseInt(args[1]) : -1;
+        String fileName = args.length >= 3 && args[2] != null ? args[2] : "";
+
+        Thread[] threads = new Thread[numOfPlayers];
+        for (int i = 0; i < numOfPlayers; i++) {
+            threads[i] = new Thread(new Player(fileName, limit));
+            threads[i].start();
+        }
+
+        for (Thread t: threads) {
+            t.join();
         }
     }
 }

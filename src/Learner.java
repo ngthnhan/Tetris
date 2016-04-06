@@ -1,4 +1,5 @@
 import com.sun.org.apache.xalan.internal.utils.FeatureManager;
+import com.sun.org.apache.xpath.internal.SourceTree;
 
 import java.io.*;
 import java.util.Random;
@@ -13,7 +14,9 @@ public class Learner implements Runnable {
     private int turnLimit;
     private String weightFile;
     private State s;
-    private State ns;
+    private NextState ns;
+    private NextState nns;
+
     private PlayerSkeleton p;
     private FeatureFunction ff;
     private final int LOST_REWARD = -1000000;
@@ -32,7 +35,8 @@ public class Learner implements Runnable {
         readWeightsVector();
 
         this.s = new State();
-        this.ns = new NextState(s);
+        this.ns = new NextState();
+        this.nns = new NextState();
 
         this.p = new PlayerSkeleton();
         this.ff = new FeatureFunction();
@@ -146,6 +150,108 @@ public class Learner implements Runnable {
     }
 
     /**
+     * This is to learn for every sample (s, a, s'). Adjust the weight vector
+     *
+     * phi(s,a) : features of state. It is a col vector size K x 1
+     * P(s,a,s') : transition model from s, a to s'
+     * phi(s', pi(s')) : features of the state after action is taken and pick the best based
+     *                   on the current policy (1 step look ahead)
+     * @return the adjusted weight vector given the sample
+     */
+    private double[] LSTDQ_OPT(State s) {
+        double[][] B = new double[K][K];
+        for (int i = 0; i < K; i++) {
+            B[i][i] = 0.00001;
+        }
+
+        double[][] b = new double[K][1];
+
+        for (int action = 0; action < s.legalMoves().length; action++) {
+            double[][] phi, phi_;
+            // B = B - B*phi(s,a)*transpose(phi(s, a) - gamma* SUM(P(s,a,s')*phi(s', pi(s'))*B * (1/
+            ns.copyState(s);
+            ns.makeMove(action);
+
+            phi = matrix.convertToColumnVector(ff.computeFeaturesVector(ns));
+
+            // Compute summation of P(s,a,s') * phi(s', pi(s'))
+            double[][] sumPhi = new double[K][1];
+            double sumReward = 0;
+
+            for (int piece = 0; piece < State.N_PIECES; piece++) {
+                nns.copyState(ns);
+                nns.setNextPiece(piece);
+                nns.makeMove(PlayerSkeleton.pickBestMove(nns, weights));
+
+                phi_ = matrix.convertToColumnVector(ff.computeFeaturesVector(nns));
+                sumPhi = matrix.matrixAdd(sumPhi, phi_);
+                sumReward += P(ns, action, nns) * R(ns, action, nns);
+            }
+            // Multiply summation with gamma and P(s,a,s')
+            // We can do this because P(s,a,s') is a constant
+            double[][] tempSum = matrix.multiplyByConstant(sumPhi, GAMMA * P(ns, action, nns));
+            double[][] transposed = matrix.transpose(matrix.matrixSub(phi, tempSum));
+
+            double[][] numerator = matrix.matrixMultplx(B, phi);
+            numerator = matrix.matrixMultplx(numerator, transposed);
+            numerator = matrix.matrixMultplx(numerator, B);
+
+            double[][] temp = matrix.matrixMultplx(transposed, B);
+            temp = matrix.matrixMultplx(temp, phi);
+            double denominator = 1.0 + temp[0][0];
+
+            B = matrix.matrixSub(B, matrix.multiplyByConstant(numerator, 1.0/denominator));
+            b = matrix.matrixSub(b, matrix.multiplyByConstant(phi, sumReward));
+        }
+
+        weights = matrix.convertToArray(matrix.matrixMultplx(B, b));
+        return weights;
+
+//        double[][] b = new double[K][1];
+//        double[][] phi = new double[K][1];
+//        double[][] tempB;
+//        NextState nextState = new NextState();
+//        NextState nextNextState = new NextState();
+//        int nextAction;
+//
+//        for (int action = 0; action < s.legalMoves().length; action++) {
+//            // A = A + phi(s,a)*transpose(phi(s,a) - GAMMA * sum(P(s,a,s')*phi(s', pi(s')))
+//            double[][] summation = new double[1][FeatureFunction.NUM_OF_FEATURE];
+//            double computeSumForB=0;
+//            double[][] temp;
+//            nextState.copyState(s);
+//            nextState.makeMove(action);
+//            double[][] currentFeatures = matrix.convertToRowVector(ff.computeFeaturesVector(nextState));
+//            for (int nextStatePiece = 0; nextStatePiece < 7; nextStatePiece++)
+//            {
+//                nextState.setNextPiece(nextStatePiece);
+//                nextAction = PlayerSkeleton.pickBestMove(nextState, weights);
+//                nextNextState.copyState(nextState);
+//                nextNextState.makeMove(nextAction);
+//                temp = matrix.convertToRowVector(ff.computeFeaturesVector(nextNextState)); // phi prime
+//                summation = matrix.matrixAdd(summation, matrix.multiplyByConstant(temp, GAMMA*P(s, action, nextState)));
+//                computeSumForB += P(s, action, nextState)*R(s, action, nextState);
+//            }
+//            summation = matrix.matrixSub(currentFeatures, summation);
+//
+//            tempB = matrix.matrixMultplx(matrix.transpose(currentFeatures), summation);
+//            tempB = matrix.matrixMultplx(matrix.matrixMultplx(B, tempB), B);
+//
+//
+//            double denom = 1 + matrix.matrixMultplx(matrix.matrixMultplx(summation, B), matrix.transpose(currentFeatures))[0][0];
+//
+//            tempB = matrix.multiplyByConstant(tempB, 1.0 / denom);
+//            B = matrix.matrixSub(B, tempB);
+//            b = matrix.matrixAdd(b, matrix.multiplyByConstant(matrix.transpose(currentFeatures), computeSumForB));
+//        }
+//
+//        tempB = matrix.matrixMultplx(B, b);
+//
+//        weights = matrix.convertToArray(tempB);
+//        return weights;
+    }
+
+    /**
      * This is mainly the wrapper to continuously iterate through samples and give it
      * to LSTDQ to adjust the weight.
      * The way we do it is by randomly pick a move for a given state to make new sample.
@@ -153,11 +259,11 @@ public class Learner implements Runnable {
      * @return the adjusted weight after the whole learning process
      */
     private double[] LSPI(int limit) {
-        NextState s = new NextState(new State());
-        for (int i=0;((limit<0)||((i<=limit)))&&(!(s.hasLost()));i++){
+        State s = new State();
+        for (int i=0; (limit<0)||(i<limit && !s.hasLost()); i++){
             int nextAction = (int)((Math.random())*s.legalMoves().length);
-            s.makeMoveWithRandomNext(nextAction);
-            weights = LSTDQ(s);
+            s.makeMove(nextAction);
+            weights = LSTDQ_OPT(s);
         }
         return weights;
     }
@@ -167,13 +273,8 @@ public class Learner implements Runnable {
     public void run() {
         // TODO: Learning process
         try {
-            int turn = 0;
-            boolean infinite = turnLimit < 0;
-            while (infinite || turn < turnLimit) {
-
-                turn++;
-            }
-
+            LSPI(this.turnLimit);
+            System.out.println(this.id + " is done");
         } finally {
             // Interrupted or finish learning. Writing back weights
             writeWeightsVector();
@@ -204,10 +305,12 @@ public class Learner implements Runnable {
             e.printStackTrace();
         }
 
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(dir.getAbsolutePath() + "final_weights.txt"))){
+        // TODO: Fix directory
+
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter("final_weights.txt"))){
             StringBuilder sb = new StringBuilder();
             for (double w: finalWeights) {
-                sb.append(w).append('\n');
+                sb.append(w/count).append('\n');
             }
 
             bw.write(sb.toString());
@@ -216,13 +319,23 @@ public class Learner implements Runnable {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         int numOfLearners = args.length >= 1 && args[0] != null ? Integer.parseInt(args[0]) : 4;
         int limit = args.length >= 2 && args[1] != null ? Integer.parseInt(args[1]) : -1;
         int startingId = args.length >= 3 && args[2] != null ? Integer.parseInt(args[2]) : 0;
 
-        for (int i = startingId; i < startingId + numOfLearners; i++) {
-            new Thread(new Learner(i, limit)).start();
+        Thread[] threads = new Thread[numOfLearners];
+        for (int i = 0; i < numOfLearners; i++) {
+            threads[i] = new Thread(new Learner(i + startingId, limit));
+            threads[i].start();
         }
+
+        for (Thread t: threads) {
+            t.join();
+        }
+
+        consolidateLearning();
+
+
     }
 }
