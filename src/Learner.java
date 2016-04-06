@@ -2,6 +2,7 @@ import com.sun.org.apache.xalan.internal.utils.FeatureManager;
 import com.sun.org.apache.xpath.internal.SourceTree;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -11,7 +12,6 @@ import java.util.Scanner;
 public class Learner implements Runnable {
     private double[] weights;
     private int id;
-    private int turnLimit;
     private String weightFile;
     private State s;
     private NextState ns;
@@ -22,14 +22,14 @@ public class Learner implements Runnable {
     private final int LOST_REWARD = -1000000;
     private final int INFINITE = -1;
     private final double GAMMA = 0.9;
+    private final double EPSILON = 0.00005;
 
     private static final String LEARNER_DIR = "Learner";
 
     private static final int K = FeatureFunction.NUM_OF_FEATURE;
 
-    private Learner(int id, int turnLimit) {
+    private Learner(int id) {
         this.id = id;
-        this.turnLimit = turnLimit;
         this.weightFile = String.format("weight%d.txt", id);
         weights = new double[FeatureFunction.NUM_OF_FEATURE];
         readWeightsVector();
@@ -255,17 +255,53 @@ public class Learner implements Runnable {
      * This is mainly the wrapper to continuously iterate through samples and give it
      * to LSTDQ to adjust the weight.
      * The way we do it is by randomly pick a move for a given state to make new sample.
+     * Learning until the difference between 2 consecutive weights is very small (convergence)
+     *
+     * EPSILON is small
      *
      * @return the adjusted weight after the whole learning process
      */
-    private double[] LSPI(int limit) {
+    private double[] LSPI() {
         State s = new State();
-        for (int i=0; (limit<0)||(i<limit && !s.hasLost()); i++){
+        double[] prevWeights;
+
+        do {
+            // Reset state for new game if it lost
+            if (s.hasLost()) s = new State();
+
+            // Making random move to generate sample
             int nextAction = (int)((Math.random())*s.legalMoves().length);
             s.makeMove(nextAction);
             weights = LSTDQ_OPT(s);
-        }
+            prevWeights = Arrays.copyOf(weights, weights.length);
+
+        } while (difference(prevWeights, weights) >= EPSILON);
+
         return weights;
+    }
+
+    /**
+     * Find absolute difference between magnitudes of vectors
+     * @param a
+     * @param b
+     * @return the absolute difference
+     */
+    private double difference(double[] a, double[] b) {
+        return Math.abs(magnitude(a) - magnitude(b));
+    }
+
+    /**
+     * Finding magnitude of a vector
+     * @param a
+     * @return the magnitude
+     */
+    private double magnitude(double[] a) {
+        double sqrSum = 0;
+        for (double d: a) {
+            sqrSum += d*d;
+        }
+
+        return Math.sqrt(sqrSum);
     }
 
 
@@ -273,7 +309,7 @@ public class Learner implements Runnable {
     public void run() {
         // TODO: Learning process
         try {
-            LSPI(this.turnLimit);
+            LSPI();
             System.out.println(this.id + " is done");
         } finally {
             // Interrupted or finish learning. Writing back weights
@@ -321,12 +357,11 @@ public class Learner implements Runnable {
 
     public static void main(String[] args) throws InterruptedException {
         int numOfLearners = args.length >= 1 && args[0] != null ? Integer.parseInt(args[0]) : 4;
-        int limit = args.length >= 2 && args[1] != null ? Integer.parseInt(args[1]) : -1;
-        int startingId = args.length >= 3 && args[2] != null ? Integer.parseInt(args[2]) : 0;
+        int startingId = args.length >= 2 && args[1] != null ? Integer.parseInt(args[1]) : 0;
 
         Thread[] threads = new Thread[numOfLearners];
         for (int i = 0; i < numOfLearners; i++) {
-            threads[i] = new Thread(new Learner(i + startingId, limit));
+            threads[i] = new Thread(new Learner(i + startingId));
             threads[i].start();
         }
 
