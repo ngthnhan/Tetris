@@ -41,8 +41,8 @@ class Player implements Runnable {
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        } finally {
             // If anything wrong happens, this player will not play any game
+            System.out.println("Something's wrong. Not playing");
             gameLimit = 0;
         }
     }
@@ -74,7 +74,8 @@ class Player implements Runnable {
                 writeReportHeader(bw, p);
             }
 
-            bw.write(p.getScore());
+            String s = new Integer(p.getScore()).toString();
+            bw.write(s);
             bw.newLine();
         } catch (IOException e) {
             e.printStackTrace();
@@ -88,6 +89,7 @@ class Player implements Runnable {
         }
 
         this.score = s.getRowsCleared();
+        System.out.println("Score: " + this.score);
     }
 
     @Override
@@ -97,14 +99,17 @@ class Player implements Runnable {
         while (infinite || limit < gameLimit) {
             limit++;
             play();
+
             writeToReport(this, reportFileName);
         }
     }
 
-    public static void main(String[] args) throws InterruptedException {
-        int numOfPlayers = args.length >= 1 && args[0] != null ? Integer.parseInt(args[0]) : 4;
-        int limit = args.length >= 2 && args[1] != null ? Integer.parseInt(args[1]) : -1;
-        String fileName = args.length >= 3 && args[2] != null ? args[2] : "";
+    public static void main(String[] args) {
+        String fileName = args.length >= 1 && args[0] != null ? args[0] : "";
+        int numOfPlayers = args.length >= 2 && args[1] != null ? Integer.parseInt(args[1]) : 4;
+        int limit = args.length >= 3 && args[2] != null ? Integer.parseInt(args[2]) : -1;
+
+
 
         Thread[] threads = new Thread[numOfPlayers];
         for (int i = 0; i < numOfPlayers; i++) {
@@ -112,8 +117,5 @@ class Player implements Runnable {
             threads[i].start();
         }
 
-        for (Thread t: threads) {
-            t.join();
-        }
     }
 }
