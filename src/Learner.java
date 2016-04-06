@@ -20,9 +20,9 @@ public class Learner implements Runnable {
     private final int INFINITE = -1;
     private final double GAMMA = 0.9;
 
-    private final String LEARNER_DIR = "Learner";
+    private static final String LEARNER_DIR = "Learner";
 
-    private final int K = FeatureFunction.NUM_OF_FEATURE;
+    private static final int K = FeatureFunction.NUM_OF_FEATURE;
 
     private Learner(int id, int turnLimit) {
         this.id = id;
