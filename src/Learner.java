@@ -97,7 +97,7 @@ public class Learner implements Runnable {
      * @return Number of lines cleared. -100000 if the action is a lost move
      */
     private double R(State s, int action, State ns) {
-        return ns.hasLost() ? LOST_REWARD : ns.getRowsCleared() - s.getRowsCleared();
+        return ns.hasLost() ? LOST_REWARD : (ns.getRowsCleared() - s.getRowsCleared()) + Math.log(ns.getTurnNumber());
     }
 
     /**
@@ -355,7 +355,7 @@ public class Learner implements Runnable {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        int numOfLearners = args.length >= 1 && args[0] != null ? Integer.parseInt(args[0]) : 4;
+        int numOfLearners = args.length >= 1 && args[0] != null ? Integer.parseInt(args[0]) : 1;
         int startingId = args.length >= 2 && args[1] != null ? Integer.parseInt(args[1]) : 0;
 
         Thread[] threads = new Thread[numOfLearners];
