@@ -98,14 +98,15 @@ public class FeatureFunction {
 		featuresVector[F2] = getErodedPieces(s, action);
 		featuresVector[F3] = getRowTransition(nextStage);
 
-		// Calling feature 4 5 6 and assign correct values
-		//features456(nextStage);
+		int[] features45Return = features45(nextStage);
+		featuresVector[F4] = features45Return[0];
+		featuresVector[F5] = features45Return[1];
 
+		featuresVector[F6] = feature6(nextStage);
 		featuresVector[F7] = features7(nextStage);
 		featuresVector[F8] = features8(nextStage);
 
-		// Calling feature 9 10 and assign correct values
-		double[] features910Return = features910(nextStage);
+		int[] features910Return = features910(nextStage);
 		featuresVector[F9] = features910Return[0];
 		featuresVector[F10] = features910Return[1];
 	}
@@ -121,22 +122,15 @@ public class FeatureFunction {
 		features[F2] = getErodedPieces(ns);
 		features[F3] = getRowTransition(ns);
 
-		// TODO: Implement such that this function returns 3 values into features.
-		// double[] results456 = features456(ns)
-		// features[F4] = results456[0];
-		// features[F5] = results456[1];
-		// featuers[F6] = results456[2]
-		// or param passing
-		// features456(ns, features);
-		//features456(ns);
+		int[] features45Return = features45(ns);
+		features[F4] = features45Return[0];
+		features[F5] = features45Return[1];
 
-		features456(ns, features);
-
+		features[F6] = feature6(ns);
 		features[F7] = features7(ns);
 		features[F8] = features8(ns);
 
-		// Calling feature 9 10 and assign correct values
-		double[] features910Return = features910(ns);
+		int[] features910Return = features910(ns);
 		features[F9] = features910Return[0];
 		features[F10] = features910Return[1];
 
@@ -145,8 +139,11 @@ public class FeatureFunction {
 
     // Implementation of f1
     double getLandingHeight(State s, int action) {
-        int orient = s.legalMoves()[action][State.ORIENT];
-        int slot = s.legalMoves()[action][State.SLOT];
+		int[][] legalMoves = s.legalMoves();
+
+        int orient = legalMoves[action][State.ORIENT];
+        int slot = legalMoves[action][State.SLOT];
+
         return getLandingHeight(s, orient, slot);
     }
     /**
@@ -187,6 +184,7 @@ public class FeatureFunction {
 	 * @return number of rows removed.
      */
 	int getErodedPieces(NextState ns) {
+		// Return difference between rows cleared before and after move
 		return ns.getRowsCleared() - ns.getOriginalState().getRowsCleared();
 	}
 
@@ -194,124 +192,117 @@ public class FeatureFunction {
     int getRowTransition(State s) {
         int transCount = 0;
 		int[][] field = s.getField();
+		int[] top = s.getTop();
+		int edgeHeight = Math.max(top[0], top[State.COLS-1]);
+
+		// Traverse all rows
         for (int i = 0; i < State.ROWS - 1; i++) {
-            if(s.getField()[i][0] == 0) transCount++;
-            if(s.getField()[i][State.COLS-1] == 0) transCount++;
+			// Count empty edge as row transition, if not higher than highest edge
+			if(i < edgeHeight) {
+				if (field[i][0] == 0) transCount++;
+				if (field[i][State.COLS - 1] == 0) transCount++;
+			}
+
+			// Count all row transitions
             for(int j=1;j<State.COLS;j++) {
                 if (isDifferent(field[i][j], field[i][j-1])) {
                     transCount++;
                 }
             }
         }
+
         return transCount;
     }
 
-    // Implementation of f4
-
-	/*
-	 * Also implemented features 1-20 mentioned in the handout Index Labels:
-	 * 0-Column Transitions 1-Number of Holes 2-Well Depths(NotCumalative) 3 to
-	 * 11 - Consecutive well depths 12 to 21 - Column Heights 22 - Maximum
-	 * column height
-	 */
-	public void features456(State s, double[] featuresVector) {
-		double[] computedValues = new double[3];
-		Arrays.fill(computedValues, 0);
+    // Implementation of f4 and f5
+	public int[] features45(State s) {
 		int[][] field = s.getField();
 		int[] top = s.getTop();
-		int maxTop = top[0];
-		int cumulativeWell;
-		for (int i = 0; i < State.ROWS; i++) {
-			for (int j = 0; j < State.COLS; j++) {
-				// FIXME: Boundary checking when j = 0
-				try{
-				if ((field[i][j] != 0)
-						&& ((field[i+1][j] == 0) || (field[i-1][j] == 0)))
-					computedValues[0]++;
-				}
-			catch(Exception e){}
-				// If a filled cell is adjacent to an empty cell in the same column, we add 1 to the column transitions
-				try{
-				if ((field[i][j] == 0) && (field[i+1][j] != 0))
-					computedValues[1]++;
-				}
-				catch(Exception e){}
-				// If a hole is right below an filled cell, we add 1 to number of holes. This is confusing but remember that this is not hole depths but number of holes
-				try{
-				if ((j == 0 || top[j - 1] > top[j])
-						&& (j == 9 || top[j + 1] > top[j])) {
-					// We check if the adjacent columns have height greater than the current column
-					if (j == 0) {
-						cumulativeWell = top[1] - top[0];
-						// For the 1st column, the well depth is the difference between its height and column 2's height
-					} else if (j == 9) {
-						// Same as the previous 1, column9 - column8
-						cumulativeWell = top[8] - top[9];
-					} else {
-						// For any intermediate column, the well depth is the minimum difference between columns height and its neighbours height
-						cumulativeWell = Math.min(top[j - 1], top[j + 1]) - top[j];
-					}
-					computedValues[2] += cumulativeWell
-								* (cumulativeWell + 1) / 2;
-					// Using the formula n*(n+1)/2 to calculate cumulative well depths
-				}
-			}catch(Exception e){}
-			}
-		}
-		/*
-		for (int j = 0; j < State.ROWS; j++) {
-			if (j != (State.ROWS - 1))
-				computedValues[3 + j] = top[j] - top[j + 1];
-			if (maxTop < top[j])
-				maxTop = top[j];
-			computedValues[12 + j] = top[j];
-		}
-		computedValues[22] = maxTop;*/
+		// Feature 4 result:
+		int columnTransitions = 0;
+		// Feature 5 result:
+		int holes = 0;
+		boolean columnDone = false;
 
-		// TODO: Change the computedValues to use featuresVector
-		featuresVector[F4] = computedValues[0];
-		featuresVector[F5] = computedValues[1];
-		featuresVector[F6] = computedValues[2];
-		return;
+		// Traverse each column
+		for (int i = 0; i < State.COLS; i++) {
+			// Traverse each row until the second highest
+			for (int j = 0; j < State.ROWS - 1; j++) {
+				// Feature 4: Count any differences in adjacent rows
+				if (isDifferent(field[j][i], field[j+1][i]))
+					columnTransitions++;
+				// Feature 5: Count any empty cells directly under a filled cell
+				if ((field[j][i] == 0) && (field[j+1][i] > 0))
+					holes++;
+				// Break if rest of column is empty
+				if(j >= top[i])
+					columnDone = true;
+			}
+			if(columnDone)
+				continue;
+		}
+
+		int[] results = {columnTransitions, holes};
+		return results;
 	}
 
-	// Implementation of f5
-
 	// Implementation of f6
+	public int feature6(State s)
+	{
+		int[] top = s.getTop();
+		int cumulativeWells = 0;
+
+		for (int i = 0; i < State.COLS; i++){
+			// Feature 6:
+			// Make sure array doesn't go out of bounds
+			int prevCol = i == 0 ? State.ROWS : top[i - 1];
+			int nextCol = i == State.COLS - 1 ? State.ROWS : top[i + 1];
+
+			// Find depth of well
+			int wellDepth = Math.min(prevCol, nextCol) - top[i];
+			// If number is positive, there is a well. Calculate cumulative well depth
+			if(wellDepth > 0)
+				cumulativeWells += wellDepth * (wellDepth + 1) / 2;
+		}
+
+		return cumulativeWells;
+	}
 
 	// Implementation of f7: counting hole depth
 	public int features7(State s) {
-		int finalValue = 0;
-		boolean holeDetected;
+		int[][] field = s.getField();
 		int[] top = s.getTop();
+		boolean holeDetected;
+		int holeDepth = 0;
 
 		for (int i = 0; i < s.COLS; i++) {
 			holeDetected = false;
 			// Only go as high as the column height
 			for (int j = 0; j < top[i]; j++) {
 				// Flag if a hole is detected in the column
-				if(s.getField()[j][i] == 0)
+				if(field[j][i] == 0)
 					holeDetected = true;
 				// Count every filled square above the hole
 				else if(holeDetected)
-					finalValue++;
+					holeDepth++;
 			}
 		}
 
-		return finalValue;
+		return holeDepth;
 	}
 
 	// Implementation of f8: row hole count
 	public int features8(State s) {
 		int finalValue = 0;
-
+		int[][] field = s.getField();
 		int[] top = s.getTop();
+
 		for (int i = 0; i < s.ROWS; i++) {
 			for (int j = 0; j < s.COLS; j++) {
 				// Skip if above top of column
-				if(i > top[j]) continue;
+				if(i >= top[j]) continue;
 				// If a hole is found, count row and jump to next row
-				if (s.getField()[i][j] == 0) {
+				if (field[i][j] == 0) {
 					finalValue++;
 					break;
 				}
@@ -321,37 +312,37 @@ public class FeatureFunction {
 		return finalValue;
 	}
 
-	// Implementation of f9
+	// Implementation of f9 and f10
 
-	public double[] features910(State s) {
-		double[] computedValues = new double[23];
-		Arrays.fill(computedValues, 0);
+	public int[] features910(State s) {
 		int[] top = s.getTop();
 		int[][][] pBottom = State.getpBottom();
+		// Feature 9 result:
 		int totalAcc = 0;
+		// Feature 10 result:
 		int uniqueAcc = 0;
-		boolean pieceFitsFlag;
+		boolean[] pieceFitsFlags = new boolean[State.N_PIECES];
 
 		// Note that even though we have four for loops, the time
-		// complexity is not O(n^4), as all the array lenghts are fixed
+		// complexity is not O(n^4), as all the array lengths are fixed
 
 		// For each column
 		for (int i = 0; i < State.COLS - 1; i++) {
 			// For each different piece
-			for (int j = 0; j < pBottom.length; j++) {
-				pieceFitsFlag = false;
+			for (int j = 0; j < State.N_PIECES; j++) {
 				// For each rotation
 				for (int k = 0; k < pBottom[j].length; k++) {
-					boolean rotationFitsFlag = true;
+					boolean rotationFitsFlag = false;
 					// For each piece column.
 					for (int l = 0; l < pBottom[j][k].length - 1; l++) {
 						// Skip if only two columns are left, and
 						// the rotation is three squares wide
 						if (top.length - i < pBottom[j][k].length)
 							continue;
+						rotationFitsFlag = true;
 						// Check if the the stack pattern matches the piece's
 						// bottom
-						if (top[i] - top[i + 1] != pBottom[j][k][l]
+						if (top[i + l] - top[i + l + 1] != pBottom[j][k][l]
 								- pBottom[j][k][l + 1]) {
 							// Break if part of piece does not fit
 							rotationFitsFlag = false;
@@ -360,20 +351,18 @@ public class FeatureFunction {
 					}
 					if(rotationFitsFlag){
 						totalAcc++;
-						pieceFitsFlag = true;
+						pieceFitsFlags[j] = true;
 					}
 				}
-				// Only count unique piece once, regardless of number of fits
-				if (pieceFitsFlag)
-					uniqueAcc++;
 			}
 		}
+		// Only count unique piece once, regardless of number of fits
+		for (boolean b: pieceFitsFlags)
+			if(b) uniqueAcc++;
 
-		double[] ret = {uniqueAcc, totalAcc};
+		int[] ret = {uniqueAcc, totalAcc};
 		return ret;
 	}
-
-	// Implementation of f10
 
 	// Implementation of function to compute the Value of a State
 	public double valueOfState(double[] computedValues, double[] weights) {

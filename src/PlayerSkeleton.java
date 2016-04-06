@@ -1,7 +1,5 @@
-import javax.xml.parsers.FactoryConfigurationError;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Scanner;
 
 public class PlayerSkeleton {
@@ -114,17 +112,10 @@ public class PlayerSkeleton {
 				bestFeatures = currentFeatures;
 			}
 		}
-		nextState.copyState(s);
-		nextState.makeMove(bestMove);
-		if (DEBUG) {
-			/*
-			int[][] field = nextState.getField();
-			for (int i = 0; i < State.ROWS; i++) {
-			for (int j = 0; j < State.COLS; j++){
-				System.out.print(field[i][j]);
-			}
-			System.out.println();
-		}*/
+/*		nextState.copyState(s);
+		currentFeatures = ff.computeFeaturesVector(nextState);
+		learning(currentFeatures,bestFeatures,num);
+*/		if (DEBUG) {
 			printFeatures(bestFeatures);
 		}
 		/*
