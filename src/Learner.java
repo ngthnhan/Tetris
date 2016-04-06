@@ -179,8 +179,8 @@ public class Learner implements Runnable {
             double sumReward = 0;
 
             for (int piece = 0; piece < State.N_PIECES; piece++) {
+                ns.setNextPiece(piece);
                 nns.copyState(ns);
-                nns.setNextPiece(piece);
                 nns.makeMove(PlayerSkeleton.pickBestMove(nns, weights));
 
                 phi_ = matrix.convertToColumnVector(ff.computeFeaturesVector(nns));
@@ -201,7 +201,7 @@ public class Learner implements Runnable {
             double denominator = 1.0 + temp[0][0];
 
             B = matrix.matrixSub(B, matrix.multiplyByConstant(numerator, 1.0/denominator));
-            b = matrix.matrixSub(b, matrix.multiplyByConstant(phi, sumReward));
+            b = matrix.matrixAdd(b, matrix.multiplyByConstant(phi, sumReward));
         }
 
         weights = matrix.convertToArray(matrix.matrixMultplx(B, b));
