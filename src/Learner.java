@@ -263,6 +263,8 @@ public class Learner implements Runnable {
         double[] prevWeights;
 
         do {
+            prevWeights = Arrays.copyOf(weights, weights.length);
+
             // Reset state for new game if it lost
             if (s.hasLost()) s = new State();
 
@@ -270,7 +272,7 @@ public class Learner implements Runnable {
             int nextAction = (int)((Math.random())*s.legalMoves().length);
             s.makeMove(nextAction);
             weights = LSTDQ_OPT(s);
-            prevWeights = Arrays.copyOf(weights, weights.length);
+
 
         } while (difference(prevWeights, weights) >= EPSILON);
 
