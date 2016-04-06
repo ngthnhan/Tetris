@@ -286,7 +286,14 @@ public class Learner implements Runnable {
      * @return the absolute difference
      */
     private double difference(double[] a, double[] b) {
-        return Math.abs(magnitude(a) - magnitude(b));
+        if (a.length != b.length) throw new IllegalArgumentException("Arrays not same size");
+        int length = a.length;
+        double[] diff = new double[length];
+        for (int i = 0; i < length; i++) {
+            diff[i] = a[i] - b[i];
+        }
+
+        return magnitude(diff);
     }
 
     /**
