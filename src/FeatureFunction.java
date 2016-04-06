@@ -185,7 +185,7 @@ public class FeatureFunction {
      */
 	int getErodedPieces(NextState ns) {
 		// Return difference between rows cleared before and after move
-		return ns.getRowsCleared() - ns.getOriginalState().getRowsCleared();
+		return ns.getRowsCleared() - ns.getOriginalState().getRowsCleared() + 1;
 	}
 
     // Implementation of f3

@@ -71,7 +71,7 @@ public class Learner implements Runnable {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(weightFile))) {
             for (Double b: weights) {
                 bw.write(b.toString());
-                bw.write('\n');
+                bw.newLine();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -112,10 +112,8 @@ public class Learner implements Runnable {
     private double[] LSTDQ(NextState s) {
         double[][] A = new double[K][K]; // Refer to algo on page 19
         double[][] b = new double[K][1];
-        double[][] phi = new double[K][1];
         double[][] tempA;
-        NextState nextState = new NextState();
-        NextState nextNextState = new NextState();
+
         int nextAction;
 
         for (int action = 0; action < s.legalMoves().length; action++) {
@@ -123,18 +121,18 @@ public class Learner implements Runnable {
             double[][] summation = new double[1][FeatureFunction.NUM_OF_FEATURE];
             double computeSumForB=0;
             double[][] temp;
-            nextState.copyState(s);
-            nextState.makeMove(action);
-            double[][] currentFeatures = matrix.convertToRowVector(ff.computeFeaturesVector(nextState));
+            ns.copyState(s);
+            ns.makeMove(action);
+            double[][] currentFeatures = matrix.convertToRowVector(ff.computeFeaturesVector(ns));
             for (int nextStatePiece = 0; nextStatePiece < 7; nextStatePiece++)
             {
-                nextState.setNextPiece(nextStatePiece);
-                nextAction = PlayerSkeleton.pickBestMove(nextState, weights);
-                nextNextState.copyState(nextState);
-                nextNextState.makeMove(nextAction);
-                temp = matrix.convertToRowVector(ff.computeFeaturesVector(nextNextState));
-                summation = matrix.matrixAdd(summation, matrix.multiplyByConstant(temp, GAMMA*P(s, action, nextState)));
-                computeSumForB += P(s, action, nextState)*R(s, action, nextState);
+                ns.setNextPiece(nextStatePiece);
+                nextAction = PlayerSkeleton.pickBestMove(ns, weights);
+                nns.copyState(ns);
+                nns.makeMove(nextAction);
+                temp = matrix.convertToRowVector(ff.computeFeaturesVector(nns));
+                summation = matrix.matrixAdd(summation, matrix.multiplyByConstant(temp, GAMMA*P(ns, action, nns)));
+                computeSumForB += P(ns, action, nns)*R(ns, action, nns);
             }
             summation = matrix.matrixSub(currentFeatures, summation);
             tempA = matrix.matrixMultplx(matrix.transpose(currentFeatures), summation);
@@ -145,6 +143,7 @@ public class Learner implements Runnable {
         weights = matrix.convertToArray(tempA);
         return weights;
     }
+
 
     /**
      * This is to learn for every sample (s, a, s'). Adjust the weight vector
@@ -203,49 +202,6 @@ public class Learner implements Runnable {
 
         weights = matrix.convertToArray(matrix.matrixMultplx(B, b));
         return weights;
-
-//        double[][] b = new double[K][1];
-//        double[][] phi = new double[K][1];
-//        double[][] tempB;
-//        NextState nextState = new NextState();
-//        NextState nextNextState = new NextState();
-//        int nextAction;
-//
-//        for (int action = 0; action < s.legalMoves().length; action++) {
-//            // A = A + phi(s,a)*transpose(phi(s,a) - GAMMA * sum(P(s,a,s')*phi(s', pi(s')))
-//            double[][] summation = new double[1][FeatureFunction.NUM_OF_FEATURE];
-//            double computeSumForB=0;
-//            double[][] temp;
-//            nextState.copyState(s);
-//            nextState.makeMove(action);
-//            double[][] currentFeatures = matrix.convertToRowVector(ff.computeFeaturesVector(nextState));
-//            for (int nextStatePiece = 0; nextStatePiece < 7; nextStatePiece++)
-//            {
-//                nextState.setNextPiece(nextStatePiece);
-//                nextAction = PlayerSkeleton.pickBestMove(nextState, weights);
-//                nextNextState.copyState(nextState);
-//                nextNextState.makeMove(nextAction);
-//                temp = matrix.convertToRowVector(ff.computeFeaturesVector(nextNextState)); // phi prime
-//                summation = matrix.matrixAdd(summation, matrix.multiplyByConstant(temp, GAMMA*P(s, action, nextState)));
-//                computeSumForB += P(s, action, nextState)*R(s, action, nextState);
-//            }
-//            summation = matrix.matrixSub(currentFeatures, summation);
-//
-//            tempB = matrix.matrixMultplx(matrix.transpose(currentFeatures), summation);
-//            tempB = matrix.matrixMultplx(matrix.matrixMultplx(B, tempB), B);
-//
-//
-//            double denom = 1 + matrix.matrixMultplx(matrix.matrixMultplx(summation, B), matrix.transpose(currentFeatures))[0][0];
-//
-//            tempB = matrix.multiplyByConstant(tempB, 1.0 / denom);
-//            B = matrix.matrixSub(B, tempB);
-//            b = matrix.matrixAdd(b, matrix.multiplyByConstant(matrix.transpose(currentFeatures), computeSumForB));
-//        }
-//
-//        tempB = matrix.matrixMultplx(B, b);
-//
-//        weights = matrix.convertToArray(tempB);
-//        return weights;
     }
 
     /**
