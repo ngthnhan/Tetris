@@ -153,10 +153,10 @@ public class Learner implements Runnable {
      * @return the adjusted weight after the whole learning process
      */
     private double[] LSPI(int limit) {
-        State s = new State();
+        NextState s = new NextState(new State());
         for (int i=0;((limit<0)||((i<=limit)))&&(!(s.hasLost()));i++){
             int nextAction = (int)((Math.random())*s.legalMoves().length);
-            s.makeMove(nextAction);
+            s.makeMoveWithRandomNext(nextAction);
             weights = LSTDQ(s);
         }
         return weights;

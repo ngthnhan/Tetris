@@ -38,6 +38,12 @@ public class NextState extends State {
 		this.top = new int[COLS];
 	}
 
+    //random integer, returns 0-6
+    private int randomPiece() {
+        return (int)(Math.random()*N_PIECES);
+    }
+
+
     public void copyState(State s) {
         originalState = s;
         this.nextPiece = s.getNextPiece();
@@ -68,6 +74,11 @@ public class NextState extends State {
     public void makeMove(int move) {
         action = move;
         makeMove(legalMoves[nextPiece][move]);
+    }
+
+    public void makeMoveWithRandomNext(int move) {
+        makeMove(move);
+        nextPiece = randomPiece();
     }
 
     public boolean makeMove(int orient, int slot) {
