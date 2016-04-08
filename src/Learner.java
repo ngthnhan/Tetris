@@ -272,10 +272,12 @@ public class Learner implements Runnable {
         // TODO: Learning process
         try {
             LSPI();
-            System.out.println(this.id + " is done");
+            System.out.println("Learner#" + this.id + " is done");
         } finally {
             // Interrupted or finish learning. Writing back weights
+            System.out.println("Learner#" + this.id + " is writing back weights");
             writeWeightsVector();
+            System.out.println("Learner#" + this.id + " 's done writing back weights");
         }
     }
 
@@ -317,7 +319,7 @@ public class Learner implements Runnable {
         }
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         int numOfLearners = args.length >= 1 && args[0] != null ? Integer.parseInt(args[0]) : 1;
         int startingId = args.length >= 2 && args[1] != null ? Integer.parseInt(args[1]) : 0;
 
@@ -327,12 +329,17 @@ public class Learner implements Runnable {
             threads[i].start();
         }
 
-        for (Thread t: threads) {
-            t.join();
+        try {
+            for (Thread t: threads) {
+                t.join();
+            }
+        } catch (InterruptedException e) {
+            System.out.println("Interrupted! Shutting down all instances of learners.");
+            for (Thread t: threads) t.interrupt();
         }
 
+        System.out.println("Done learning or interrupted. Beginning to consolidate learning.");
         consolidateLearning();
-
-
+        System.out.println("Done consolidate learning!");
     }
 }

@@ -21,6 +21,8 @@ class Player implements Runnable {
     private int score;
     private int gameLimit;
 
+    private boolean inGame;
+
     private double[] getWeights() { return weights; }
     private int getScore() { return score; }
 
@@ -30,6 +32,8 @@ class Player implements Runnable {
         this.score = 0;
         this.weights = new double[FeatureFunction.NUM_OF_FEATURE];
         this.gameLimit = gameLimit;
+
+        this.inGame = false;
 
         readPolicy();
     }
@@ -84,11 +88,13 @@ class Player implements Runnable {
 
     private void play() {
         State s = new State();
+        inGame = true;
         while(!s.hasLost()) {
             s.makeMove(PlayerSkeleton.pickBestMove(s, weights));
         }
 
         this.score = s.getRowsCleared();
+        inGame = false;
         System.out.println("Score: " + this.score);
     }
 
@@ -96,11 +102,15 @@ class Player implements Runnable {
     public void run() {
         int limit = 0;
         boolean infinite = gameLimit < 0;
-        while (infinite || limit < gameLimit) {
-            limit++;
-            play();
+        try {
+            while (infinite || limit < gameLimit) {
+                limit++;
+                play();
 
-            writeToReport(this, reportFileName);
+                writeToReport(this, reportFileName);
+            }
+        } finally {
+            if (!inGame) writeToReport(this, reportFileName);
         }
     }
 
@@ -117,5 +127,13 @@ class Player implements Runnable {
             threads[i].start();
         }
 
+        try {
+            for (Thread t: threads) {
+                t.join();
+            }
+        } catch (InterruptedException e) {
+            System.out.println("Interrupted! Shutting down all instances of players.");
+            for (Thread t: threads) t.interrupt();
+        }
     }
 }
