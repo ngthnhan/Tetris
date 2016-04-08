@@ -11,11 +11,10 @@ public class Learner implements Runnable {
     private int id;
     private String weightFileName;
     private File weightFile;
-    private State s;
+
     private NextState ns;
     private NextState nns;
 
-    private PlayerSkeleton p;
     private FeatureFunction ff;
     private final int LOST_REWARD = -1000000;
     private final int INFINITE = -1;
@@ -34,11 +33,9 @@ public class Learner implements Runnable {
         weights = new double[FeatureFunction.NUM_OF_FEATURE];
         readWeightsVector();
 
-        this.s = new State();
         this.ns = new NextState();
         this.nns = new NextState();
 
-        this.p = new PlayerSkeleton();
         this.ff = new FeatureFunction();
     }
 
