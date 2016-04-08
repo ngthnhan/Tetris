@@ -9,7 +9,8 @@ import java.util.Scanner;
 public class Learner implements Runnable {
     private double[] weights;
     private int id;
-    private String weightFile;
+    private String weightFileName;
+    private File weightFile;
     private State s;
     private NextState ns;
     private NextState nns;
@@ -27,7 +28,9 @@ public class Learner implements Runnable {
 
     private Learner(int id) {
         this.id = id;
-        this.weightFile = String.format("weight%d.txt", id);
+        this.weightFileName = String.format("weight%d.txt", id);
+
+        weightFile = new File(LEARNER_DIR, weightFileName);
         weights = new double[FeatureFunction.NUM_OF_FEATURE];
         readWeightsVector();
 
@@ -55,11 +58,9 @@ public class Learner implements Runnable {
                     weights[i] = rdm.nextBoolean() ? w : -w;
                 }
 
-                // Create file if not exists
-                File file = new File(weightFile);
 
-                if (!file.exists()) {
-                    file.createNewFile();
+                if (!weightFile.exists()) {
+                    weightFile.createNewFile();
                 }
             } catch (IOException f) {
                 f.printStackTrace();
@@ -269,7 +270,6 @@ public class Learner implements Runnable {
 
     @Override
     public void run() {
-        // TODO: Learning process
         try {
             LSPI();
             System.out.println("Learner#" + this.id + " is done");
@@ -290,11 +290,13 @@ public class Learner implements Runnable {
      */
     public static void consolidateLearning() {
         File dir = new File(LEARNER_DIR);
+        File targetFile = new File(LEARNER_DIR, "final_weights.txt");
+
         double[] finalWeights = new double[K];
 
         int count = 0;
         try {
-            for (File w: dir.listFiles()) {
+            for (File w: dir.listFiles((d, name) -> name.matches("^weight\\d+\\.txt$"))) {
                 Scanner sc = new Scanner(w);
                 count++;
                 for (int i = 0; i < K; i++) {
@@ -305,9 +307,10 @@ public class Learner implements Runnable {
             e.printStackTrace();
         }
 
-        // TODO: Fix directory
+        BufferedWriter bw = null;
 
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter("final_weights.txt"))){
+        try {
+            bw = new BufferedWriter(new FileWriter(targetFile));
             StringBuilder sb = new StringBuilder();
             for (double w: finalWeights) {
                 sb.append(w/count).append('\n');
@@ -316,6 +319,12 @@ public class Learner implements Runnable {
             bw.write(sb.toString());
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            if (bw != null) try {
+                bw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

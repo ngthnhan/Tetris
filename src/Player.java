@@ -103,7 +103,7 @@ class Player implements Runnable {
         int limit = 0;
         boolean infinite = gameLimit < 0;
         try {
-            while (infinite || limit < gameLimit) {
+            while (!Thread.currentThread().isInterrupted() && infinite || limit < gameLimit) {
                 limit++;
                 play();
 
@@ -111,6 +111,7 @@ class Player implements Runnable {
             }
         } finally {
             if (!inGame) writeToReport(this, reportFileName);
+            System.out.println("Shutting down!");
         }
     }
 
@@ -119,13 +120,18 @@ class Player implements Runnable {
         int numOfPlayers = args.length >= 2 && args[1] != null ? Integer.parseInt(args[1]) : 4;
         int limit = args.length >= 3 && args[2] != null ? Integer.parseInt(args[2]) : -1;
 
-
-
         Thread[] threads = new Thread[numOfPlayers];
         for (int i = 0; i < numOfPlayers; i++) {
             threads[i] = new Thread(new Player(fileName, limit));
             threads[i].start();
         }
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                System.out.println("Interrupted! Shutting down all instances of players.");
+                for (Thread t: threads) t.interrupt();
+            }
+        });
 
         try {
             for (Thread t: threads) {

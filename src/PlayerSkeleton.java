@@ -18,7 +18,7 @@ public class PlayerSkeleton {
 	public PlayerSkeleton(){
 		nextState = new NextState();
 		ff = new FeatureFunction();
-		weights = readWeights("final_weights.txt");
+//		weights = readWeights("final_weights.txt");
 	}
 
 	public double[] readWeights(String fileName) {
