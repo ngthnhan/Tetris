@@ -109,7 +109,7 @@ public class Learner implements Runnable {
      * @return Number of lines cleared. -100000 if the action is a lost move
      */
     private double R(State s, int action, State ns) {
-        return ns.hasLost() ? LOST_REWARD : (ns.getRowsCleared() - s.getRowsCleared()) + Math.log(ns.getTurnNumber());
+        return ns.hasLost() ? LOST_REWARD : (ns.getRowsCleared() - s.getRowsCleared());
     }
 
     /**
