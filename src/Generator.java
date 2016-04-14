@@ -81,8 +81,7 @@ public class Generator {
             }
 
             encodedStr = convertToStr(encodedNums);
-            if (!explored.contains(encodedStr)) break;
-        } while (!explored.contains(encodedStr));
+        } while (explored.contains(encodedStr));
 
         return encodedStr;
     }
