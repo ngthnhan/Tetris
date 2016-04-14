@@ -18,6 +18,8 @@ public class Learner implements Runnable {
     private final int INFINITE = -1;
     private final double GAMMA = 0.9;
     private final double EPSILON = 0.00005;
+
+    private static Random rand;
     private static ArrayList<String> samplesSource;
 
     private static final String LEARNER_DIR = "Learner";
@@ -29,6 +31,11 @@ public class Learner implements Runnable {
         this.weightFileName = String.format("weight%d.txt", id);
 
         if (samplesSource == null) samplesSource = new ArrayList<String>();
+        if (rand == null) {
+            rand = new Random();
+            rand.setSeed(System.currentTimeMillis());
+        }
+
 
         weightFile = new File(LEARNER_DIR, weightFileName);
         weights = new double[FeatureFunction.NUM_OF_FEATURE];
@@ -240,7 +247,7 @@ public class Learner implements Runnable {
             // Making random move to generate sample
             do {
                 do {
-                    i = (new Random()).nextInt(size);
+                    i = rand.nextInt(size);
                 } while(examined.contains(i));
                 s = Generator.decodeState(samplesSource.get(i));
                 examined.add(i);
