@@ -349,6 +349,13 @@ public class Learner implements Runnable {
                 sb.append(w).append('\n');
             }
 
+            // Write current average
+            sb.append("---Average---\n");
+
+            for (double w: finalWeights) {
+                sb.append(w/count).append('\n');
+            }
+
             bw.write(sb.toString());
         } catch (IOException e) {
             e.printStackTrace();
