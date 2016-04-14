@@ -28,8 +28,6 @@ public class Generator {
     }
 
     public static NextState decodeState(String encoded) {
-        NextState s = new NextState();
-
         String[] strs = encoded.split(",");
         int[] nums = new int[NUM_OF_ENCODED];
         int[][] fields = new int[NextState.ROWS][NextState.COLS];
@@ -73,6 +71,7 @@ public class Generator {
             if (!valid) return null;
         }
 
+        NextState s = new NextState();
         s.setNextPiece(nextPiece);
         s.setFieldDeep(fields);
         s.setTopDeep(tops);
@@ -97,9 +96,13 @@ public class Generator {
             }
 
             encodedStr = convertToStr(encodedNums);
-        } while (explored.contains(encodedStr));
+        } while (explored.contains(encodedStr) || !isValid(encodedStr));
 
         return encodedStr;
+    }
+
+    public boolean isValid(String str) {
+        return decodeState(str) != null;
     }
 
     public void generate(int limit, String fName) {
