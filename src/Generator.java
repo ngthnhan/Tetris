@@ -71,6 +71,9 @@ public class Generator {
             if (!valid) return null;
         }
 
+        // Check if nextPiece is valid
+        if (nextPiece >= NextState.N_PIECES) return null;
+
         NextState s = new NextState();
         s.setNextPiece(nextPiece);
         s.setFieldDeep(fields);
