@@ -309,8 +309,17 @@ public class Learner implements Runnable {
         File targetFile = new File(LEARNER_DIR, "final_weights.txt");
 
         double[] finalWeights = new double[K];
-
         int count = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader("final_weights.txt"))){
+            Scanner sc = new Scanner(br);
+            count = sc.nextInt();
+            for (int i = 0; i < K; i++) {
+                finalWeights[i] = sc.nextDouble();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         try {
             for (File w: dir.listFiles((d, name) -> name.matches("^weight\\d+\\.txt$"))) {
                 Scanner sc = new Scanner(w);
@@ -328,8 +337,9 @@ public class Learner implements Runnable {
         try {
             bw = new BufferedWriter(new FileWriter(targetFile));
             StringBuilder sb = new StringBuilder();
+            sb.append(count).append('\n');
             for (double w: finalWeights) {
-                sb.append(w/count).append('\n');
+                sb.append(w).append('\n');
             }
 
             bw.write(sb.toString());
