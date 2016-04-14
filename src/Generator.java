@@ -46,8 +46,8 @@ public class Generator {
                 fields[i][j] = nums[num] & 1;
                 nums[bits / 32] >>= 1;
                 bits++;
-                if (fields[i][j] == 1 && tops[j] < i) {
-                    tops[j] = i;
+                if (fields[i][j] == 1) {
+                    tops[j] = i + 1;
                 }
             }
         }
