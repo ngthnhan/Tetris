@@ -18,7 +18,7 @@ public class PlayerSkeleton {
 	public PlayerSkeleton(){
 		nextState = new NextState();
 		ff = new FeatureFunction();
-//		weights = readWeights("final_weights.txt");
+		weights = readWeights("final_weights.txt");
 	}
 
 	public double[] readWeights(String fileName) {
@@ -51,6 +51,12 @@ public class PlayerSkeleton {
 		System.out.println("Rows with holes: 			" + features[7]);
 		System.out.println("No of pieces accommodated: 	" + features[8]);
 		System.out.println("No of move accommodated: 	" + features[9]);
+		System.out.println("Covered Gaps: 				" + features[10]);
+		System.out.println("Average Difference Height: 	" + features[11]);
+		System.out.println("Total Difference Height:	" + features[12]);
+		System.out.println("Max Height:					" + features[13]);
+		System.out.println("Diff Max Min Height: 		" + features[14]);
+		System.out.println("Column Standard Deviation: 	" + features[15]);
 	}
 
 
