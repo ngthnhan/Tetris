@@ -9,7 +9,6 @@ public class Learner implements Runnable {
     private int id;
     private String weightFileName;
     private File weightFile;
-    private String sourceFileName;
 
     private NextState ns;
     private NextState nns;
@@ -19,18 +18,17 @@ public class Learner implements Runnable {
     private final int INFINITE = -1;
     private final double GAMMA = 0.9;
     private final double EPSILON = 0.00005;
-    private ArrayList<String> samplesSource;
+    private static ArrayList<String> samplesSource;
 
     private static final String LEARNER_DIR = "Learner";
 
     private static final int K = FeatureFunction.NUM_OF_FEATURE;
 
-    private Learner(int id, String source) {
+    private Learner(int id) {
         this.id = id;
         this.weightFileName = String.format("weight%d.txt", id);
-        this.sourceFileName = source;
 
-        samplesSource = new ArrayList<String>();
+        if (samplesSource == null) samplesSource = new ArrayList<String>();
 
         weightFile = new File(LEARNER_DIR, weightFileName);
         weights = new double[FeatureFunction.NUM_OF_FEATURE];
@@ -79,8 +77,9 @@ public class Learner implements Runnable {
         }
     }
 
-    private void readSampleSource() {
-        try (BufferedReader br = new BufferedReader(new FileReader(sourceFileName))) {
+    private static synchronized  void readSampleSource() {
+        if (samplesSource != null && samplesSource.size() > 0) return;
+        try (BufferedReader br = new BufferedReader(new FileReader("states.txt"))) {
             Scanner sc = new Scanner(br);
             int i = 0;
             while(sc.hasNext()) {
@@ -348,11 +347,10 @@ public class Learner implements Runnable {
     public static void main(String[] args) {
         int numOfLearners = args.length >= 1 && args[0] != null ? Integer.parseInt(args[0]) : 1;
         int startingId = args.length >= 2 && args[1] != null ? Integer.parseInt(args[1]) : 0;
-        String source = args.length >= 3 ? args[2] : "states.txt";
 
         Thread[] threads = new Thread[numOfLearners];
         for (int i = 0; i < numOfLearners; i++) {
-            threads[i] = new Thread(new Learner(i + startingId, source));
+            threads[i] = new Thread(new Learner(i + startingId));
             threads[i].start();
         }
 
