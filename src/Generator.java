@@ -81,6 +81,7 @@ public class Generator {
             }
 
             encodedStr = convertToStr(encodedNums);
+            if (!explored.contains(encodedStr)) break;
         } while (!explored.contains(encodedStr));
 
         return encodedStr;
@@ -127,7 +128,7 @@ public class Generator {
     }
 
     public static void main(String[] args) {
-        int limit = (args.length >= 1) ? Integer.parseInt(args[0]) : 500;
+        int limit = (args.length >= 1) ? Integer.parseInt(args[0]) : 100;
         String fName = (args.length >= 2) ? args[1] : "states.txt";
 
         Generator g = new Generator();
