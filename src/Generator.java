@@ -41,12 +41,12 @@ public class Generator {
         int bits = 0;
         int[] tops = new int[NextState.COLS];
         int t;
-        for (int i = 0; i < NextState.ROWS; i++) {
+        for (int i = 0; i < NextState.ROWS - 1; i++) {
             t = 0;
             for (int j = 0; j < NextState.COLS; j++) {
                 int num = bits / 32;
                 fields[i][j] = nums[num] & 1;
-                nums[bits / 32] <<= 1;
+                nums[bits / 32] >>= 1;
                 bits++;
                 if (fields[i][j] == 1 && tops[j] < i) {
                     tops[j] = i;
@@ -55,7 +55,23 @@ public class Generator {
         }
 
         int nextPiece = nums[NUM_OF_ENCODED-1] & ((1 << 3) - 1);
-        System.out.println(nextPiece);
+
+        // Checking validity of the state
+        int maxHeight = 0;
+        for (int j = 0; j < NextState.COLS; j++) {
+            if (tops[j] > maxHeight) maxHeight = tops[j];
+        }
+
+        // Checking if there is a row with all empty or all non-empty
+        boolean valid;
+        for (int i = 0; i < maxHeight; i++) {
+            valid = false;
+            for (int j = 0; j < NextState.COLS - 1; j++) {
+                if (fields[i][j] != fields[i][j+1]) valid = true;
+            }
+
+            if (!valid) return null;
+        }
 
         s.setNextPiece(nextPiece);
         s.setFieldDeep(fields);
@@ -132,6 +148,8 @@ public class Generator {
 
         Generator g = new Generator();
         g.generate(limit, fName);
+//        Generator.decodeState("1141230911,-654591384,1287972206,-1601558924,-1582006779,-370877823,-609776290");
+
 
     }
 }

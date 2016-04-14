@@ -1,7 +1,5 @@
 import java.io.*;
-import java.util.Arrays;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Created by nhan on 28/3/16.
@@ -11,6 +9,7 @@ public class Learner implements Runnable {
     private int id;
     private String weightFileName;
     private File weightFile;
+    private String sourceFileName;
 
     private NextState ns;
     private NextState nns;
@@ -20,14 +19,18 @@ public class Learner implements Runnable {
     private final int INFINITE = -1;
     private final double GAMMA = 0.9;
     private final double EPSILON = 0.00005;
+    private ArrayList<String> samplesSource;
 
     private static final String LEARNER_DIR = "Learner";
 
     private static final int K = FeatureFunction.NUM_OF_FEATURE;
 
-    private Learner(int id) {
+    private Learner(int id, String source) {
         this.id = id;
         this.weightFileName = String.format("weight%d.txt", id);
+        this.sourceFileName = source;
+
+        samplesSource = new ArrayList<String>();
 
         weightFile = new File(LEARNER_DIR, weightFileName);
         weights = new double[FeatureFunction.NUM_OF_FEATURE];
@@ -70,6 +73,18 @@ public class Learner implements Runnable {
             for (Double b: weights) {
                 bw.write(b.toString());
                 bw.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void readSampleSource() {
+        try (BufferedReader br = new BufferedReader(new FileReader(sourceFileName))) {
+            Scanner sc = new Scanner(br);
+            int i = 0;
+            while(sc.hasNext()) {
+                samplesSource.add(sc.nextLine());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -213,20 +228,25 @@ public class Learner implements Runnable {
      * @return the adjusted weight after the whole learning process
      */
     private double[] LSPI() {
-        State s = new State();
         double[] prevWeights;
+        readSampleSource();
+        int size = samplesSource.size();
+        HashSet<Integer> examined = new HashSet<Integer>(size);
+        int i;
+        NextState s;
 
         do {
             prevWeights = Arrays.copyOf(weights, weights.length);
 
-            // Reset state for new game if it lost
-            if (s.hasLost()) s = new State();
-
             // Making random move to generate sample
-            int nextAction = (int)((Math.random())*s.legalMoves().length);
-            s.makeMove(nextAction);
+            do {
+                do {
+                    i = (new Random()).nextInt(size);
+                } while(examined.contains(i));
+                s = Generator.decodeState(samplesSource.get(i));
+                examined.add(i);
+            } while (s == null);
             weights = LSTDQ_OPT(s);
-
 
         } while (difference(prevWeights, weights) >= EPSILON);
 
@@ -328,10 +348,11 @@ public class Learner implements Runnable {
     public static void main(String[] args) {
         int numOfLearners = args.length >= 1 && args[0] != null ? Integer.parseInt(args[0]) : 1;
         int startingId = args.length >= 2 && args[1] != null ? Integer.parseInt(args[1]) : 0;
+        String source = args.length >= 3 ? args[2] : "states.txt";
 
         Thread[] threads = new Thread[numOfLearners];
         for (int i = 0; i < numOfLearners; i++) {
-            threads[i] = new Thread(new Learner(i + startingId));
+            threads[i] = new Thread(new Learner(i + startingId, source));
             threads[i].start();
         }
 
