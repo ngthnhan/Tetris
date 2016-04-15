@@ -38,10 +38,10 @@ public class matrix {
     /**
      * returns the transpose of the input matrix M
      */
-    public static Double [][] transpose(Double [][] M){
+    public static double [][] transpose(double [][] M){
         int mRows = M.length;
         int mCols = M[0].length;
-        Double [][] resultMatrix = new Double [mCols][mRows];
+        double [][] resultMatrix = new double [mCols][mRows];
         for(int i = 0; i < mRows; i++){
             for(int j = 0; j < mCols; j++){
                 resultMatrix[j][i] = M[i][j];
@@ -190,22 +190,25 @@ public class matrix {
     public static double[][] multiplyByConstant(double[][] M, double c) {
         int mRows = M.length;
         int mCols = M[0].length;
+        double [][] resultMatrix = new double [mRows][mCols];
+
         for(int i = 0; i < mRows; i++){
             for(int j = 0; j < mCols; j++){
-                M[i][j] = c*M[i][j];
+                resultMatrix[i][j] = c*M[i][j];
             }
         }
-        return M;
+        return resultMatrix;
     }
 
     /**
      * Return the Inverse of the matrix
      */
     public static double [][] matrixInverse(double [][] M) throws IllegalArgumentException {
-        if(determinant(M)==0){
+        double det = determinant(M);
+        if(det==0){
             throw new IllegalArgumentException("The determinant is Zero, the matrix doesn't have an inverse");
         }
-        return (multiplyByConstant(matrixAdjugate(M), 1.0/determinant(M)));
+        return (multiplyByConstant(matrixAdjugate(M), 1.0/det));
     }
 
     public static double [][] convertToRowVector(double[] singleArray){

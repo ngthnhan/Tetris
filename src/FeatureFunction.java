@@ -27,7 +27,7 @@ public class FeatureFunction {
 
     // Feature 10
 
-	public static final int NUM_OF_FEATURE = 10;
+	public static final int NUM_OF_FEATURE = 19;
 	public static final int F1 	= 0; // Landing height
 	public static final int F2 	= 1; // Rows clear
 	public static final int F3 	= 2; // Row transition
@@ -38,6 +38,16 @@ public class FeatureFunction {
 	public static final int F8 	= 7; // Row hole
 	public static final int F9 	= 8; // Number of different pieces accommodated
 	public static final int F10 = 9; // Total number of pieces + rotations accommodated
+	public static final int F11	= 10; 
+	public static final int F12	= 11; 
+	public static final int F13	= 12; 
+	public static final int F14	= 13; 
+	public static final int F15 = 14; 
+	public static final int F16 = 15;
+	public static final int F17	= 16; 
+	public static final int F18 = 17; 
+	public static final int F19 = 18;
+
 
 	private double[] featuresVector = new double[NUM_OF_FEATURE];
 
@@ -102,7 +112,7 @@ public class FeatureFunction {
 		featuresVector[F4] = features45Return[0];
 		featuresVector[F5] = features45Return[1];
 
-		featuresVector[F6] = feature6(nextStage);
+		//featuresVector[F6] = feature6(nextStage);
 		featuresVector[F7] = features7(nextStage);
 		featuresVector[F8] = features8(nextStage);
 
@@ -125,8 +135,17 @@ public class FeatureFunction {
 		int[] features45Return = features45(ns);
 		features[F4] = features45Return[0];
 		features[F5] = features45Return[1];
-
-		features[F6] = feature6(ns);
+		features[F11] = features45Return[2];
+		features[F19] = features45Return[3];
+		double[] features6Return = feature6(ns);
+		features[F6] = features6Return[0];
+		features[F12] = features6Return[1];
+		features[F13] = features6Return[2];
+		features[F14] = features6Return[3];
+		features[F15] = features6Return[4];
+		features[F16] = features6Return[5];
+		features[F17] = features6Return[6];
+		features[F18] = features6Return[7];
 		features[F7] = features7(ns);
 		features[F8] = features8(ns);
 
@@ -185,7 +204,7 @@ public class FeatureFunction {
      */
 	int getErodedPieces(NextState ns) {
 		// Return difference between rows cleared before and after move
-		return ns.getRowsCleared() - ns.getOriginalState().getRowsCleared();
+		return ns.getRowsCleared() - ns.getOriginalState().getRowsCleared() + 1;
 	}
 
     // Implementation of f3
@@ -222,6 +241,7 @@ public class FeatureFunction {
 		int columnTransitions = 0;
 		// Feature 5 result:
 		int holes = 0;
+		int gaps = 0, totalBlocks=0;
 		boolean columnDone = false;
 
 		// Traverse each column
@@ -234,6 +254,10 @@ public class FeatureFunction {
 				// Feature 5: Count any empty cells directly under a filled cell
 				if ((field[j][i] == 0) && (field[j+1][i] > 0))
 					holes++;
+				if ((field[j][i] == 0) && j<top[i])
+					gaps++;
+				if (field[j][i]!=0)
+					totalBlocks++;
 				// Break if rest of column is empty
 				if(j >= top[i])
 					columnDone = true;
@@ -242,17 +266,31 @@ public class FeatureFunction {
 				continue;
 		}
 
-		int[] results = {columnTransitions, holes};
+		int[] results = {columnTransitions, holes, gaps, totalBlocks};
 		return results;
 	}
 
 	// Implementation of f6
-	public int feature6(State s)
+	public double[] feature6(State s)
 	{
 		int[] top = s.getTop();
-		int cumulativeWells = 0;
+		double cumulativeWells = 0,
+		maxHeight=0,
+		minHeight = Integer.MAX_VALUE,
+		total=0,
+		maxWellDepth=0,
+		totalWellDepth=0,
+		totalHeightSquared = 0,
+		diffTotal = 0,
+		squaredDiffTotal=0,colStdDev=0;
 
 		for (int i = 0; i < State.COLS; i++){
+			total += top[i];
+			totalHeightSquared += Math.pow(top[i], 2);	
+			diffTotal += (i>0)?Math.abs(top[i-1]-top[i]):0;
+			squaredDiffTotal += (i>0)?Math.abs(Math.pow(top[i-1],2)-Math.pow(top[i],2)):0;
+			maxHeight = Math.max(maxHeight,top[i]);
+			minHeight = Math.min(minHeight,top[i]); 
 			// Feature 6:
 			// Make sure array doesn't go out of bounds
 			int prevCol = i == 0 ? State.ROWS : top[i - 1];
@@ -261,11 +299,16 @@ public class FeatureFunction {
 			// Find depth of well
 			int wellDepth = Math.min(prevCol, nextCol) - top[i];
 			// If number is positive, there is a well. Calculate cumulative well depth
-			if(wellDepth > 0)
-				cumulativeWells += wellDepth * (wellDepth + 1) / 2;
-		}
-
-		return cumulativeWells;
+			if(wellDepth > 0){
+				maxWellDepth = Math.max(wellDepth, maxWellDepth);
+				totalWellDepth 	+= maxWellDepth;
+				cumulativeWells += wellDepth * (wellDepth + 1) / 2;}
+			}
+		total = ((double)total)/State.COLS;
+		minHeight = maxHeight-minHeight;
+		colStdDev = (totalHeightSquared - total*((double)total)/State.COLS)/(double)(State.COLS-1);
+		double[] results = {cumulativeWells, total, diffTotal, maxHeight, minHeight, colStdDev, maxWellDepth, totalWellDepth};
+		return results;
 	}
 
 	// Implementation of f7: counting hole depth
