@@ -241,7 +241,6 @@ public class Learner implements Runnable {
     private double[] LSPI() {
         double[] prevWeights;
         readSampleSource();
-        int size = samplesSource.size();
         NextState s;
 
         do {
