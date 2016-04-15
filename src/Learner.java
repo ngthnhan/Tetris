@@ -178,7 +178,7 @@ public class Learner implements Runnable {
      *                   on the current policy (1 step look ahead)
      * @return the adjusted weight vector given the sample
      */
-    private double[] LSTDQ_OPT(State s) {
+    private double[] LSTDQ_OPT(ArrayList<Integer> sourceIndex) {
         double[][] B = new double[K][K];
         for (int i = 0; i < K; i++) {
             B[i][i] = 0.00001;
@@ -186,46 +186,51 @@ public class Learner implements Runnable {
 
         double[][] b = new double[K][1];
 
-        for (int action = 0; action < s.legalMoves().length; action++) {
-            double[][] phi, phi_;
-            // B = B - B*phi(s,a)*transpose(phi(s, a) - gamma* SUM(P(s,a,s')*phi(s', pi(s'))*B * (1/
-            ns.copyState(s);
-            ns.makeMove(action);
+        for (Integer i: sourceIndex) {
+            NextState s = Generator.decodeState(samplesSource.get(i));
+            if (s == null) continue;
 
-            if (ns.hasLost()) continue;
-            phi = matrix.convertToColumnVector(ff.computeFeaturesVector(ns));
+            for (int action = 0; action < s.legalMoves().length; action++) {
+                double[][] phi, phi_;
+                // B = B - B*phi(s,a)*transpose(phi(s, a) - gamma* SUM(P(s,a,s')*phi(s', pi(s'))*B * (1/
+                ns.copyState(s);
+                ns.makeMove(action);
 
-            // Compute summation of P(s,a,s') * phi(s', pi(s'))
-            double[][] sumPhi = new double[K][1];
-            double sumReward = 0;
+                if (ns.hasLost()) continue;
+                phi = matrix.convertToColumnVector(ff.computeFeaturesVector(ns));
 
-            for (int piece = 0; piece < State.N_PIECES; piece++) {
-                ns.setNextPiece(piece);
-                nns.copyState(ns);
-                nns.makeMove(PlayerSkeleton.pickBestMove(nns, weights));
+                // Compute summation of P(s,a,s') * phi(s', pi(s'))
+                double[][] sumPhi = new double[K][1];
+                double sumReward = 0;
 
-                phi_ = matrix.convertToColumnVector(ff.computeFeaturesVector(nns));
-                sumPhi = matrix.matrixAdd(sumPhi, phi_);
-                sumReward += P(ns, action, nns) * R(ns, action, nns);
+                for (int piece = 0; piece < State.N_PIECES; piece++) {
+                    ns.setNextPiece(piece);
+                    nns.copyState(ns);
+                    nns.makeMove(PlayerSkeleton.pickBestMove(nns, weights));
+
+                    phi_ = matrix.convertToColumnVector(ff.computeFeaturesVector(nns));
+                    sumPhi = matrix.matrixAdd(sumPhi, phi_);
+                    sumReward += P(ns, action, nns) * R(ns, action, nns);
+                }
+                // Multiply summation with gamma and P(s,a,s')
+                // We can do this because P(s,a,s') is a constant
+                double[][] tempSum = matrix.multiplyByConstant(sumPhi, GAMMA * P(ns, action, nns));
+                double[][] transposed = matrix.transpose(matrix.matrixSub(phi, tempSum));
+
+                double[][] numerator = matrix.matrixMultplx(B, phi);
+                numerator = matrix.matrixMultplx(numerator, transposed);
+                numerator = matrix.matrixMultplx(numerator, B);
+
+                double[][] temp = matrix.matrixMultplx(transposed, B);
+                temp = matrix.matrixMultplx(temp, phi);
+                double denominator = 1.0 + temp[0][0];
+
+                B = matrix.matrixSub(B, matrix.multiplyByConstant(numerator, 1.0 / denominator));
+                b = matrix.matrixAdd(b, matrix.multiplyByConstant(phi, sumReward));
             }
-            // Multiply summation with gamma and P(s,a,s')
-            // We can do this because P(s,a,s') is a constant
-            double[][] tempSum = matrix.multiplyByConstant(sumPhi, GAMMA * P(ns, action, nns));
-            double[][] transposed = matrix.transpose(matrix.matrixSub(phi, tempSum));
-
-            double[][] numerator = matrix.matrixMultplx(B, phi);
-            numerator = matrix.matrixMultplx(numerator, transposed);
-            numerator = matrix.matrixMultplx(numerator, B);
-
-            double[][] temp = matrix.matrixMultplx(transposed, B);
-            temp = matrix.matrixMultplx(temp, phi);
-            double denominator = 1.0 + temp[0][0];
-
-            B = matrix.matrixSub(B, matrix.multiplyByConstant(numerator, 1.0/denominator));
-            b = matrix.matrixAdd(b, matrix.multiplyByConstant(phi, sumReward));
         }
-
         weights = matrix.convertToArray(matrix.matrixMultplx(B, b));
+
         return weights;
     }
 
@@ -247,13 +252,13 @@ public class Learner implements Runnable {
         do {
             prevWeights = Arrays.copyOf(weights, weights.length);
 
-            // Making random move to generate sample
-            for (String str: samplesSource) {
-                s = Generator.decodeState(str);
-                if (s == null) continue;
+            ArrayList<Integer> source = new ArrayList<Integer>();
+            for (int i = 0; i < samplesSource.size(); i++) source.add(i);
 
-                weights = LSTDQ_OPT(s);
-            }
+            Collections.shuffle(source);
+            // Making random move to generate sample
+            weights = LSTDQ_OPT(source);
+
         } while (difference(prevWeights, weights) >= EPSILON);
 
         return weights;
@@ -327,8 +332,21 @@ public class Learner implements Runnable {
         double alpha = 0.01;
         double beta = 0.5;
 
+        FilenameFilter weightFilter = new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.matches("^weight\\d+\\.txt$");
+            }
+        };
 
-        for (File w: new File(LEARNER_DIR).listFiles((d, name) -> name.matches("^weight\\d+\\.txt$"))) {
+        FilenameFilter reportFilter = new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.matches("^report_weight\\d+\\.txt$");
+            }
+        };
+
+        for (File w: new File(LEARNER_DIR).listFiles(weightFilter)) {
             for (int i = 0; i < gamesNo; i++) {
                 threadPool.execute(new Player(w.getName(), 1));
             }
@@ -339,7 +357,7 @@ public class Learner implements Runnable {
 
         ArrayList<PolicyResult> samples = new ArrayList<PolicyResult>();
 
-        for (File w: new File(Player.REPORT_DIR).listFiles((d, name) -> name.matches("^report_weight\\d+\\.txt$"))) {
+        for (File w: new File(Player.REPORT_DIR).listFiles(reportFilter)) {
             samples.add(Player.getResult(w.getName()));
         }
         // After the results are obtained. Proceed to Second step
@@ -392,7 +410,14 @@ public class Learner implements Runnable {
         }
 
         try {
-            for (File w: dir.listFiles((d, name) -> name.matches("^weight\\d+\\.txt$"))) {
+            FilenameFilter fileNameFilter = new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.matches("^weight\\d+\\.txt$");
+                }
+            };
+
+            for (File w: dir.listFiles(fileNameFilter)) {
                 Scanner sc = new Scanner(w);
                 count++;
                 for (int i = 0; i < K; i++) {
@@ -452,13 +477,14 @@ public class Learner implements Runnable {
         }
 
         System.out.println("Done learning or interrupted. Beginning to consolidate learning.");
-        try {
-            consolidateLearning_SGD();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        consolidateLearning();
+//        try {
+//            consolidateLearning_SGD();
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
         System.out.println("Done consolidate learning!");
     }
 }
