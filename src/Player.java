@@ -97,6 +97,11 @@ class Player implements Runnable {
 
     private static synchronized void writeToReport(Player p, File f) {
         boolean exists = f.exists() && f.isFile();
+        if (!exists) try {
+            f.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(f, exists))){
             if (!exists) {
@@ -120,7 +125,6 @@ class Player implements Runnable {
 
         this.score = s.getRowsCleared();
         inGame = false;
-        System.out.println("Score: " + this.score);
     }
 
     @Override
@@ -132,11 +136,10 @@ class Player implements Runnable {
                 limit++;
                 play();
 
-                writeToReport(this, reportFile);
+                writeToReport(this, reportFileName);
             }
         } finally {
-            if (!inGame) writeToReport(this, reportFile);
-            System.out.println("Shutting down!");
+            if (!inGame) writeToReport(this, reportFileName);
         }
     }
 
@@ -181,7 +184,7 @@ class Player implements Runnable {
         int numOfPlayers = args.length >= 2 && args[1] != null ? Integer.parseInt(args[1]) : 4;
         int limit = args.length >= 3 && args[2] != null ? Integer.parseInt(args[2]) : -1;
 
-        Thread[] threads = new Thread[numOfPlayers];
+        final Thread[] threads = new Thread[numOfPlayers];
         for (int i = 0; i < numOfPlayers; i++) {
             threads[i] = new Thread(new Player(fileName, limit));
             threads[i].start();

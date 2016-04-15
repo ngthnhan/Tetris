@@ -27,18 +27,18 @@ public class FeatureFunction {
 
     // Feature 10
 
-	public static final int NUM_OF_FEATURE = 16;
+	public static final int NUM_OF_FEATURE = 7;
 	public static final int F1 	= 0; // Landing height
 	public static final int F2 	= 1; // Rows clear
 	public static final int F3 	= 2; // Row transition
 	public static final int F4 	= 3; // Col transition
 	public static final int F5 	= 4; // Num of holes
 	public static final int F6 	= 5; // Well sum
-	public static final int F7 	= 6; // Hole depth
+	public static final int F7 	= 10; // Hole depth
 	public static final int F8 	= 7; // Row hole
 	public static final int F9 	= 8; // Number of different pieces accommodated
 	public static final int F10 = 9; // Total number of pieces + rotations accommodated
-	public static final int F11	= 10; 
+	public static final int F11	= 6;
 	public static final int F12	= 11; 
 	public static final int F13	= 12; 
 	public static final int F14	= 13; 
@@ -135,17 +135,17 @@ public class FeatureFunction {
 		features[F11] = features45Return[2];
 		double[] features6Return = feature6(ns);
 		features[F6] = features6Return[0];
-		features[F12] = features6Return[1];
-		features[F13] = features6Return[2];
-		features[F14] = features6Return[3];
-		features[F15] = features6Return[4];
-		features[F16] = features6Return[5];
-		features[F7] = features7(ns);
-		features[F8] = features8(ns);
-
-		int[] features910Return = features910(ns);
-		features[F9] = features910Return[0];
-		features[F10] = features910Return[1];
+//		features[F12] = features6Return[1];
+//		features[F13] = features6Return[2];
+//		features[F14] = features6Return[3];
+//		features[F15] = features6Return[4];
+//		features[F16] = features6Return[5];
+//		features[F7] = features7(ns);
+//		features[F8] = features8(ns);
+//
+//		int[] features910Return = features910(ns);
+//		features[F9] = features910Return[0];
+//		features[F10] = features910Return[1];
 
 		return features;
 	}

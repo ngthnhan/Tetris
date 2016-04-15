@@ -178,7 +178,7 @@ public class Learner implements Runnable {
      *                   on the current policy (1 step look ahead)
      * @return the adjusted weight vector given the sample
      */
-    private double[] LSTDQ_OPT(ArrayList<Integer> sourceIndex) {
+    private double[] LSTDQ_OPT(int limit) {
         double[][] B = new double[K][K];
         for (int i = 0; i < K; i++) {
             B[i][i] = 0.00001;
@@ -186,9 +186,12 @@ public class Learner implements Runnable {
 
         double[][] b = new double[K][1];
 
-        for (Integer i: sourceIndex) {
-            NextState s = Generator.decodeState(samplesSource.get(i));
-            if (s == null) continue;
+        Generator gen = new Generator();
+        NextState s;
+        for (int l = 0; l < limit; l++) {
+            do {
+                s = Generator.decodeState(gen.generateUniqueState());
+            } while (s == null);
 
             for (int action = 0; action < s.legalMoves().length; action++) {
                 double[][] phi, phi_;
@@ -246,21 +249,19 @@ public class Learner implements Runnable {
      */
     private double[] LSPI() {
         double[] prevWeights;
-        readSampleSource();
-        NextState s;
+//        readSampleSource();
+//        NextState s;
+
+        int count = 20;
 
         do {
             prevWeights = Arrays.copyOf(weights, weights.length);
-
-            ArrayList<Integer> source = new ArrayList<Integer>();
-            for (int i = 0; i < samplesSource.size(); i++) source.add(i);
-
-            Collections.shuffle(source);
             // Making random move to generate sample
-            weights = LSTDQ_OPT(source);
+            weights = LSTDQ_OPT(50000);
 
-        } while (difference(prevWeights, weights) >= EPSILON);
+        } while (difference(prevWeights, weights) >= EPSILON && count-- > 0);
 
+        System.out.println(count);
         return weights;
     }
 
