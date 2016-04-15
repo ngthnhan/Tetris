@@ -250,7 +250,9 @@ public class Learner implements Runnable {
             // Making random move to generate sample
             do {
                 do {
-                    System.out.println("Here:\t\t" + examined.size()+"\t\t\t"+i);
+                    if(examined.size() % 100000 == 0) {
+                        System.out.println("Here:\t\t" + examined.size()+"\t\t\t"+i);
+                    }
                     i = rand.nextInt(size);
                 } while(examined.contains(i)&&examined.size() < size);
                 s = Generator.decodeState(samplesSource.get(i));
@@ -341,7 +343,7 @@ public class Learner implements Runnable {
         threadPool.shutdown();
         threadPool.awaitTermination(1L, TimeUnit.DAYS);
 
-        ArrayList<PolicyResult> samples = new ArrayList();
+        ArrayList<PolicyResult> samples = new ArrayList<PolicyResult>();
 
         for (File w: new File(Player.REPORT_DIR).listFiles((d, name) -> name.matches("^report_weight\\d+\\.txt$"))) {
             samples.add(Player.getResult(w.getName()));
