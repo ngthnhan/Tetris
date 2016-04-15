@@ -159,10 +159,10 @@ public class PlayerSkeleton {
 			s.draw();
 			s.drawNext(0,0);
 			try {
-				if (p.DEBUG) {
+				if (false) {
 					System.in.read();
 				} else {
-					Thread.sleep(300);
+					Thread.sleep(30);
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();

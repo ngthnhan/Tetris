@@ -238,7 +238,7 @@ public class Learner implements Runnable {
         readSampleSource();
         int size = samplesSource.size();
         HashSet<Integer> examined = new HashSet<Integer>(size);
-        int i;
+        int i=0;
         NextState s;
 
         do {
@@ -247,14 +247,15 @@ public class Learner implements Runnable {
             // Making random move to generate sample
             do {
                 do {
+                    System.out.println("Here:\t\t" + examined.size()+"\t\t\t"+i);
                     i = rand.nextInt(size);
-                } while(examined.contains(i));
+                } while(examined.contains(i)&&examined.size() < size);
                 s = Generator.decodeState(samplesSource.get(i));
                 examined.add(i);
             } while (s == null);
             weights = LSTDQ_OPT(s);
 
-        } while (difference(prevWeights, weights) >= EPSILON);
+        } while (difference(prevWeights, weights) >= EPSILON && examined.size() < size);
 
         return weights;
     }

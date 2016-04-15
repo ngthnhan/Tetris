@@ -27,7 +27,7 @@ public class FeatureFunction {
 
     // Feature 10
 
-	public static final int NUM_OF_FEATURE = 16;
+	public static final int NUM_OF_FEATURE = 19;
 	public static final int F1 	= 0; // Landing height
 	public static final int F2 	= 1; // Rows clear
 	public static final int F3 	= 2; // Row transition
@@ -44,6 +44,9 @@ public class FeatureFunction {
 	public static final int F14	= 13; 
 	public static final int F15 = 14; 
 	public static final int F16 = 15;
+	public static final int F17	= 16; 
+	public static final int F18 = 17; 
+	public static final int F19 = 18;
 
 
 	private double[] featuresVector = new double[NUM_OF_FEATURE];
@@ -133,6 +136,7 @@ public class FeatureFunction {
 		features[F4] = features45Return[0];
 		features[F5] = features45Return[1];
 		features[F11] = features45Return[2];
+		features[F19] = features45Return[3];
 		double[] features6Return = feature6(ns);
 		features[F6] = features6Return[0];
 		features[F12] = features6Return[1];
@@ -140,6 +144,8 @@ public class FeatureFunction {
 		features[F14] = features6Return[3];
 		features[F15] = features6Return[4];
 		features[F16] = features6Return[5];
+		features[F17] = features6Return[6];
+		features[F18] = features6Return[7];
 		features[F7] = features7(ns);
 		features[F8] = features8(ns);
 
@@ -235,7 +241,7 @@ public class FeatureFunction {
 		int columnTransitions = 0;
 		// Feature 5 result:
 		int holes = 0;
-		int gaps = 0;
+		int gaps = 0, totalBlocks=0;
 		boolean columnDone = false;
 
 		// Traverse each column
@@ -250,6 +256,8 @@ public class FeatureFunction {
 					holes++;
 				if ((field[j][i] == 0) && j<top[i])
 					gaps++;
+				if (field[j][i]!=0)
+					totalBlocks++;
 				// Break if rest of column is empty
 				if(j >= top[i])
 					columnDone = true;
@@ -258,7 +266,7 @@ public class FeatureFunction {
 				continue;
 		}
 
-		int[] results = {columnTransitions, holes, gaps};
+		int[] results = {columnTransitions, holes, gaps, totalBlocks};
 		return results;
 	}
 
@@ -270,6 +278,8 @@ public class FeatureFunction {
 		maxHeight=0,
 		minHeight = Integer.MAX_VALUE,
 		total=0,
+		maxWellDepth=0,
+		totalWellDepth=0,
 		totalHeightSquared = 0,
 		diffTotal = 0,
 		squaredDiffTotal=0,colStdDev=0;
@@ -289,13 +299,15 @@ public class FeatureFunction {
 			// Find depth of well
 			int wellDepth = Math.min(prevCol, nextCol) - top[i];
 			// If number is positive, there is a well. Calculate cumulative well depth
-			if(wellDepth > 0)
-				cumulativeWells += wellDepth * (wellDepth + 1) / 2;
-		}
+			if(wellDepth > 0){
+				maxWellDepth = Math.max(wellDepth, maxWellDepth);
+				totalWellDepth 	+= maxWellDepth;
+				cumulativeWells += wellDepth * (wellDepth + 1) / 2;}
+			}
 		total = ((double)total)/State.COLS;
 		minHeight = maxHeight-minHeight;
 		colStdDev = (totalHeightSquared - total*((double)total)/State.COLS)/(double)(State.COLS-1);
-		double[] results = {cumulativeWells, total, diffTotal, maxHeight, minHeight, colStdDev};
+		double[] results = {cumulativeWells, total, diffTotal, maxHeight, minHeight, colStdDev, maxWellDepth, totalWellDepth};
 		return results;
 	}
 
