@@ -18,6 +18,9 @@ class Player implements Runnable {
     private double[] weights;
     private String policyFileName;
     private String reportFileName;
+    private File policyFile;
+    private File reportFile;
+
     private int score;
     private int gameLimit;
 
@@ -26,9 +29,15 @@ class Player implements Runnable {
     private double[] getWeights() { return weights; }
     private int getScore() { return score; }
 
+    public static final String REPORT_DIR = "Report";
+
     Player(String policyFile, int gameLimit) {
         this.policyFileName = policyFile;
         this.reportFileName = "report_" + policyFile;
+
+        this.policyFile = new File(Learner.LEARNER_DIR, policyFile);
+        this.reportFile = new File(REPORT_DIR, reportFileName);
+
         this.score = 0;
         this.weights = new double[FeatureFunction.NUM_OF_FEATURE];
         this.gameLimit = gameLimit;
@@ -39,7 +48,7 @@ class Player implements Runnable {
     }
 
     private void readPolicy() {
-        try (Scanner sc = new Scanner(new FileReader(policyFileName))) {
+        try (Scanner sc = new Scanner(new FileReader(policyFile))) {
             for (int i = 0; i < weights.length; i++) {
                 weights[i] = sc.nextDouble();
             }
@@ -86,6 +95,22 @@ class Player implements Runnable {
         }
     }
 
+    private static synchronized void writeToReport(Player p, File f) {
+        boolean exists = f.exists() && f.isFile();
+
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(f, exists))){
+            if (!exists) {
+                writeReportHeader(bw, p);
+            }
+
+            String s = new Integer(p.getScore()).toString();
+            bw.write(s);
+            bw.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void play() {
         State s = new State();
         inGame = true;
@@ -107,11 +132,47 @@ class Player implements Runnable {
                 limit++;
                 play();
 
-                writeToReport(this, reportFileName);
+                writeToReport(this, reportFile);
             }
         } finally {
-            if (!inGame) writeToReport(this, reportFileName);
+            if (!inGame) writeToReport(this, reportFile);
             System.out.println("Shutting down!");
+        }
+    }
+
+    /**
+     * Will parse the report file and return the PolicyResult object.
+     *
+     * @param fileName the name of the report file
+     * @return the PolicyResult object contains weights and average value. Null if not successful
+     *
+     */
+    public static PolicyResult getResult(String fileName) {
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+            Scanner sc = new Scanner(br);
+            // For simplicity, assuming all report file has correct header
+            sc.nextLine(); // Discard first line
+            String[] wStrs = sc.nextLine().split(" ");
+            double[] w = new double[FeatureFunction.NUM_OF_FEATURE];
+            for (int i = 0; i < wStrs.length; i++) {
+                w[i] = Double.parseDouble(wStrs[i]);
+            }
+
+            sc.nextLine(); sc.nextLine(); // Discard next 2 lines
+            int count = 0;
+            int sum = 0;
+
+            while(sc.hasNextInt()) {
+                sum += sc.nextInt();
+                count++;
+            }
+
+            double average = ((double) (sum)) / count;
+
+            return new PolicyResult(w, average);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
