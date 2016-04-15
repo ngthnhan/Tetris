@@ -1,5 +1,8 @@
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by nhan on 28/3/16.
@@ -22,7 +25,7 @@ public class Learner implements Runnable {
     private static Random rand;
     private static ArrayList<String> samplesSource;
 
-    private static final String LEARNER_DIR = "Learner";
+    public static final String LEARNER_DIR = "Learner";
 
     private static final int K = FeatureFunction.NUM_OF_FEATURE;
 
@@ -302,6 +305,70 @@ public class Learner implements Runnable {
             System.out.println("Learner#" + this.id + " is writing back weights");
             writeWeightsVector();
             System.out.println("Learner#" + this.id + " 's done writing back weights");
+        }
+    }
+
+    /**
+     * Using stochastic gradient descent to find the final weights.
+     * The value for each policy is determined by the average score of
+     * 1000 games played based on the policy
+     *
+     * First step:
+     *      Generate all the average score for each policy by iterating through
+     *      each weight file and evaluate.
+     * Second step:
+     *      Perform SGD with momentum.
+     *       dw = alpha * gradient(Q(w'), Q(w)) + beta * dw
+     *       w = w + dw
+     *
+     *      In which alpha is the learning rate, beta is the constant affect of the momentum
+     *      Both are user defined.
+     */
+    public static void consolidateLearning_SGD() throws FileNotFoundException, InterruptedException {
+        // First step
+        ExecutorService threadPool = Executors.newFixedThreadPool(10);
+        int gamesNo = 1000;
+        double alpha = 0.01;
+        double beta = 0.5;
+
+
+        for (File w: new File(LEARNER_DIR).listFiles((d, name) -> name.matches("^weight\\d+\\.txt$"))) {
+            for (int i = 0; i < gamesNo; i++) {
+                threadPool.execute(new Player(w.getName(), 1));
+            }
+        }
+
+        threadPool.shutdown();
+        threadPool.awaitTermination(1L, TimeUnit.DAYS);
+
+        ArrayList<PolicyResult> samples = new ArrayList();
+
+        for (File w: new File(Player.REPORT_DIR).listFiles((d, name) -> name.matches("^report_weight\\d+\\.txt$"))) {
+            samples.add(Player.getResult(w.getName()));
+        }
+        // After the results are obtained. Proceed to Second step
+        double[][] w = new double[K][1];
+        double[][] dw = new double[K][1]; // Delta W
+        double[][] gradient;
+
+        w = samples.get(0).weightsV;
+        for (int i = 1; i < samples.size(); i++) {
+            gradient = matrix.matrixSub(samples.get(i).weightsV, samples.get(i - 1).weightsV);
+            dw = matrix.matrixAdd(matrix.multiplyByConstant(gradient, alpha), matrix.multiplyByConstant(dw, beta));
+            w = matrix.matrixAdd(w, dw);
+        }
+
+        File targetFile = new File(LEARNER_DIR, "final_weights.txt");
+
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(targetFile))){
+            StringBuilder sb = new StringBuilder();
+            for (double[] d: w) {
+                sb.append(d[0]).append('\n');
+            }
+
+            bw.write(sb.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
