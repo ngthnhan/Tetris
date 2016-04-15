@@ -1,5 +1,7 @@
+import javax.xml.parsers.FactoryConfigurationError;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class PlayerSkeleton {
@@ -9,7 +11,7 @@ public class PlayerSkeleton {
 	public FeatureFunction ff;
 	private double[] weights;
 	double GAMMA = 0.9f;
-	private final static double MIN_VAL = Double.NEGATIVE_INFINITY;
+	private final double MIN_VAL = Double.NEGATIVE_INFINITY;
 	private final boolean DEBUG = true;
 	private final boolean LEARNING = false;
 	double[][] A = new double[FeatureFunction.NUM_OF_FEATURE][FeatureFunction.NUM_OF_FEATURE];
@@ -51,46 +53,7 @@ public class PlayerSkeleton {
 		System.out.println("Rows with holes: 			" + features[7]);
 		System.out.println("No of pieces accommodated: 	" + features[8]);
 		System.out.println("No of move accommodated: 	" + features[9]);
-		System.out.println("Covered Gaps: 				" + features[10]);
-		System.out.println("Average Difference Height: 	" + features[11]);
-		System.out.println("Total Difference Height:	" + features[12]);
-		System.out.println("Max Height:					" + features[13]);
-		System.out.println("Diff Max Min Height: 		" + features[14]);
-		System.out.println("Column Standard Deviation: 	" + features[15]);
 	}
-
-
-	/**
-	 * This function takes in a state and policy (weights vector) and
-	 * evaluate the best move
-	 * @param s
-	 * @param w
-     * @return
-     */
-	public static int pickBestMove(State s, double[] w) {
-		int bestMove=0, currentMove;
-		double bestValue = MIN_VAL, currentValue;
-		NextState ns = new NextState();
-		FeatureFunction ff = new FeatureFunction(); // May want to use singleton to optimize
-
-		for (currentMove = 0; currentMove < s.legalMoves().length; currentMove++)
-		{
-			ns.copyState(s);
-			ns.makeMove(currentMove);
-
-			if (ns.hasLost()) continue; // Ignore move if it is a lost move
-
-			currentValue = ff.valueOfState(ns, w);
-			if (currentValue > bestValue) {
-				bestMove = currentMove;
-				bestValue = currentValue;
-			}
-		}
-
-		return bestMove;
-	}
-
-
 
 	public int pickMove(State s, int[][] legalMoves) {
 		
@@ -159,10 +122,10 @@ public class PlayerSkeleton {
 			s.draw();
 			s.drawNext(0,0);
 			try {
-				if (false) {
+				if (p.DEBUG) {
 					System.in.read();
 				} else {
-					Thread.sleep(30);
+					Thread.sleep(300);
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
