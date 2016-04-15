@@ -20,7 +20,7 @@ public class Learner implements Runnable {
     private final int LOST_REWARD = -1000000;
     private final int INFINITE = -1;
     private final double GAMMA = 0.9;
-    private final double EPSILON = 0.5;
+    private final double EPSILON = 0.0005;
 
     private static Random rand;
     private static ArrayList<String> samplesSource;
@@ -242,15 +242,14 @@ public class Learner implements Runnable {
         double[] prevWeights;
         readSampleSource();
         int size = samplesSource.size();
-        HashSet<Integer> examined = new HashSet<Integer>(size);
         NextState s;
 
         do {
             prevWeights = Arrays.copyOf(weights, weights.length);
 
             // Making random move to generate sample
-            for (int i = 0; i < samplesSource.size(); i++) {
-                s = Generator.decodeState(samplesSource.get(i));
+            for (String str: samplesSource) {
+                s = Generator.decodeState(str);
                 if (s == null) continue;
 
                 weights = LSTDQ_OPT(s);
@@ -338,7 +337,7 @@ public class Learner implements Runnable {
         threadPool.shutdown();
         threadPool.awaitTermination(1L, TimeUnit.DAYS);
 
-        ArrayList<PolicyResult> samples = new ArrayList();
+        ArrayList<PolicyResult> samples = new ArrayList<PolicyResult>();
 
         for (File w: new File(Player.REPORT_DIR).listFiles((d, name) -> name.matches("^report_weight\\d+\\.txt$"))) {
             samples.add(Player.getResult(w.getName()));
