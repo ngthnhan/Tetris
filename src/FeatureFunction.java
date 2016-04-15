@@ -206,15 +206,13 @@ public class FeatureFunction {
         int transCount = 0;
 		int[][] field = s.getField();
 		int[] top = s.getTop();
-		int edgeHeight = Math.max(top[0], top[State.COLS-1]);
 
 		// Traverse all rows
         for (int i = 0; i < State.ROWS - 1; i++) {
 			// Count empty edge as row transition, if not higher than highest edge
-			if(i < edgeHeight) {
-				if (field[i][0] == 0) transCount++;
-				if (field[i][State.COLS - 1] == 0) transCount++;
-			}
+			if (field[i][0] == 0) transCount++;
+			if (field[i][State.COLS - 1] == 0) transCount++;
+
 
 			// Count all row transitions
             for(int j=1;j<State.COLS;j++) {

@@ -20,7 +20,7 @@ public class Learner implements Runnable {
     private final int LOST_REWARD = -1000000;
     private final int INFINITE = -1;
     private final double GAMMA = 0.9;
-    private final double EPSILON = 0.00005;
+    private final double EPSILON = 0.5;
 
     private static Random rand;
     private static ArrayList<String> samplesSource;
@@ -98,6 +98,8 @@ public class Learner implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        System.out.println("Done reading in states");
     }
 
     /**
@@ -241,22 +243,18 @@ public class Learner implements Runnable {
         readSampleSource();
         int size = samplesSource.size();
         HashSet<Integer> examined = new HashSet<Integer>(size);
-        int i;
         NextState s;
 
         do {
             prevWeights = Arrays.copyOf(weights, weights.length);
 
             // Making random move to generate sample
-            do {
-                do {
-                    i = rand.nextInt(size);
-                } while(examined.contains(i));
+            for (int i = 0; i < samplesSource.size(); i++) {
                 s = Generator.decodeState(samplesSource.get(i));
-                examined.add(i);
-            } while (s == null);
-            weights = LSTDQ_OPT(s);
+                if (s == null) continue;
 
+                weights = LSTDQ_OPT(s);
+            }
         } while (difference(prevWeights, weights) >= EPSILON);
 
         return weights;
@@ -455,7 +453,13 @@ public class Learner implements Runnable {
         }
 
         System.out.println("Done learning or interrupted. Beginning to consolidate learning.");
-        consolidateLearning();
+        try {
+            consolidateLearning_SGD();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         System.out.println("Done consolidate learning!");
     }
 }
