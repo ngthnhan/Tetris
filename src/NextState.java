@@ -34,6 +34,8 @@ public class NextState extends State {
 		this.turn = 0;
 		this.cleared = 0;
 
+        this.lost = false;
+
 		this.field = new int[ROWS][COLS];
 		this.top = new int[COLS];
 	}
@@ -47,7 +49,7 @@ public class NextState extends State {
     public void copyState(State s) {
         originalState = s;
         this.nextPiece = s.getNextPiece();
-
+        this.lost = s.lost;
         for (int i = 0; i < originalState.getField().length; i++) {
             field[i] = Arrays.copyOf(originalState.getField()[i], originalState.getField()[i].length);
         }

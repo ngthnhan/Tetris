@@ -192,6 +192,7 @@ public class Learner implements Runnable {
             ns.copyState(s);
             ns.makeMove(action);
 
+            if (ns.hasLost()) continue;
             phi = matrix.convertToColumnVector(ff.computeFeaturesVector(ns));
 
             // Compute summation of P(s,a,s') * phi(s', pi(s'))
@@ -353,7 +354,7 @@ public class Learner implements Runnable {
             w = matrix.matrixAdd(w, dw);
         }
 
-        File targetFile = new File(LEARNER_DIR, "final_weights.txt");
+        File targetFile = new File("final_weights.txt");
 
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(targetFile))){
             StringBuilder sb = new StringBuilder();
@@ -376,11 +377,11 @@ public class Learner implements Runnable {
      */
     public static void consolidateLearning() {
         File dir = new File(LEARNER_DIR);
-        File targetFile = new File(LEARNER_DIR, "final_weights.txt");
+        File targetFile = new File("final_weights.txt");
 
         double[] finalWeights = new double[K];
         int count = 0;
-        try (BufferedReader br = new BufferedReader(new FileReader("final_weights.txt"))){
+        try (BufferedReader br = new BufferedReader(new FileReader(targetFile))){
             Scanner sc = new Scanner(br);
             count = sc.nextInt();
             for (int i = 0; i < K; i++) {
