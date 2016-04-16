@@ -133,51 +133,6 @@ public class Learner implements Runnable {
      *                   on the current policy (1 step look ahead)
      * @return the adjusted weight vector given the sample
      */
-    private double[] LSTDQ(NextState s) {
-        double[][] A = new double[K][K]; // Refer to algo on page 19
-        double[][] b = new double[K][1];
-        double[][] tempA;
-
-        int nextAction;
-
-        for (int action = 0; action < s.legalMoves().length; action++) {
-            // A = A + phi(s,a)*transpose(phi(s,a) - GAMMA * sum(P(s,a,s')*phi(s', pi(s')))
-            double[][] summation = new double[1][FeatureFunction.NUM_OF_FEATURE];
-            double computeSumForB=0;
-            double[][] temp;
-            ns.copyState(s);
-            ns.makeMove(action);
-            double[][] currentFeatures = matrix.convertToRowVector(ff.computeFeaturesVector(ns));
-            for (int nextStatePiece = 0; nextStatePiece < 7; nextStatePiece++)
-            {
-                ns.setNextPiece(nextStatePiece);
-                nextAction = PlayerSkeleton.pickBestMove(ns, weights);
-                nns.copyState(ns);
-                nns.makeMove(nextAction);
-                temp = matrix.convertToRowVector(ff.computeFeaturesVector(nns));
-                summation = matrix.matrixAdd(summation, matrix.multiplyByConstant(temp, GAMMA*P(ns, action, nns)));
-                computeSumForB += P(ns, action, nns)*R(ns, action, nns);
-            }
-            summation = matrix.matrixSub(currentFeatures, summation);
-            tempA = matrix.matrixMultplx(matrix.transpose(currentFeatures), summation);
-            A = matrix.matrixAdd(A, tempA);
-            b = matrix.matrixAdd(b, matrix.multiplyByConstant(matrix.transpose(currentFeatures), computeSumForB));
-        }
-        tempA = matrix.matrixMultplx(matrix.matrixInverse(A),b);
-        weights = matrix.convertToArray(tempA);
-        return weights;
-    }
-
-
-    /**
-     * This is to learn for every sample (s, a, s'). Adjust the weight vector
-     *
-     * phi(s,a) : features of state. It is a col vector size K x 1
-     * P(s,a,s') : transition model from s, a to s'
-     * phi(s', pi(s')) : features of the state after action is taken and pick the best based
-     *                   on the current policy (1 step look ahead)
-     * @return the adjusted weight vector given the sample
-     */
     private double[] LSTDQ_OPT(int limit) {
         double[][] B = new double[K][K];
         for (int i = 0; i < K; i++) {
