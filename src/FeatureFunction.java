@@ -1,9 +1,3 @@
-/**
- * Created by ThanhNhan on 23/03/2016.
- */
-
-import java.util.Arrays;
-
 public class FeatureFunction {
 
 	public static final int NUM_OF_FEATURE = 8;
@@ -15,11 +9,6 @@ public class FeatureFunction {
 	public static final int F6 	= 5; // Well sum
 	public static final int F7	= 6; // Empty cells below some filled cell in the same column
 	public static final int F8	= 7; // Average height of columns
-
-
-	private double[] featuresVector = new double[NUM_OF_FEATURE];
-
-	public double[] getFeaturesVector() { return featuresVector; }
 
 	/**
 	 * Checking if the 2 given cells are different. Different are defined in term of
@@ -36,26 +25,6 @@ public class FeatureFunction {
 	}
 
 	/**
-	 * Checking if 2 given cells are filled
-	 * @param cellA
-	 * @param cellB
-     * @return true if both filled. False otherwise.
-     */
-	private boolean isBothFilled(int cellA, int cellB) {
-		return cellA != 0 && cellB != 0;
-	}
-
-	/**
-	 * Checking if 2 given cells are not filled
-	 * @param cellA
-	 * @param cellB
-     * @return true if both are not filled. False otherwise.
-     */
-	private boolean isBothNotFilled(int cellA, int cellB) {
-		return cellA == 0 && cellB == 0;
-	}
-
-	/**
 	 * This function promise to compute all the features and update
 	 * featuresVector correctly
 	 * A more compact function to compute and return the features vector using only a NextState object
@@ -64,23 +33,30 @@ public class FeatureFunction {
      */
 	public double[] computeFeaturesVector(NextState ns) {
 		double[] features = new double[NUM_OF_FEATURE];
-		features[F1] = getLandingHeight(ns.getOriginalState(), ns.getAction());
-		features[F2] = getErodedPieces(ns);
-		features[F3] = getRowTransition(ns);
+		features[F1] = feature1(ns.getOriginalState(), ns.getAction());
+		features[F2] = feature2(ns);
+		features[F3] = feature3(ns);
 
 		int[] features45Return = features457(ns);
 		features[F4] = features45Return[0];
 		features[F5] = features45Return[1];
 		features[F7] = features45Return[2];
-		double[] features6Return = feature68(ns);
+		double[] features6Return = features68(ns);
 		features[F6] = features6Return[0];
 		features[F8] = features6Return[1];
 
 		return features;
 	}
 
-    // Implementation of f1
-    double getLandingHeight(State s, int action) {
+	/**
+	 * F1: Landing height
+	 *
+	 * The height at where the piece is put = height of column + (height of piece / 2)
+	 * @param s To get the board position and how it will change according to the action
+	 * @param action The action index of the piece.
+	 * @return The heuristic score for the given state and action taken.
+	 */
+    double feature1(State s, int action) {
 		int[][] legalMoves = s.legalMoves();
 
         int orient = legalMoves[action][State.ORIENT];
@@ -88,6 +64,7 @@ public class FeatureFunction {
 
         return getLandingHeight(s, orient, slot);
     }
+
     /**
      * The height at where the piece is put = height of column + (height of piece / 2)
      * @param s To get the board position and how it will change according to the action
@@ -105,20 +82,30 @@ public class FeatureFunction {
         return height + s.getpHeight()[piece][orient] / 2.0;
     }
 	/**
+	 * F2: Row cleared
+	 *
 	 * Compute the number of rows removed if a move is taken within the NextState object
 	 * @param ns the state where the move is already taken place
 	 * @return number of rows removed.
      */
-	int getErodedPieces(NextState ns) {
+	int feature2(NextState ns) {
 		// Return difference between rows cleared before and after move
 		return ns.getRowsCleared() - ns.getOriginalState().getRowsCleared() + 1;
 	}
 
-    // Implementation of f3
-    int getRowTransition(State s) {
+
+    /**
+	 * F3: Row transition
+	 *
+	 * Number of filled cells adjacent to empty cells, summed over all rows. Implemented by traversing each row,
+	 * checking whether each filled cell is different from the cell next to it, or the border is next to an empty
+	 * cell on that row, and counting up if it is
+	 * @param s The state to check
+	 * @return the number of row transition
+     */
+    int feature3(State s) {
         int transCount = 0;
 		int[][] field = s.getField();
-		int[] top = s.getTop();
 
 		// Traverse all rows
         for (int i = 0; i < State.ROWS - 1; i++) {
@@ -135,7 +122,28 @@ public class FeatureFunction {
         return transCount;
     }
 
-    // Implementation of f4 and f5
+	/**
+	 * F4: Column transition
+	 *
+	 * Number of filled cells adjacent to empty cells, summed over all columns.
+	 * Implemented by traversing each column, checking whether each filled cell is different
+	 * from the cell above it, and counting up if it is.
+	 *
+	 * F5: Number of holes
+	 *
+	 * Number of empty cells with at least one filled cell above.
+	 * Implemented by traversing each column, checking if we have an empty cell directly under a
+	 * filled cell, and counting up if it is.
+	 *
+	 * F7: Covered empty cells
+	 *
+	 * Number of empty cells below one or more filled cells in the same column,
+	 * summed over all columns. Implemented by traversing each column, counting any empty cell
+	 * lower than its column top.
+	 *
+	 * @param s The state to check
+	 * @return an array of results of column transition, number of holes and covered empty cells
+     */
 	public int[] features457(State s) {
 		int[][] field = s.getField();
 		int[] top = s.getTop();
@@ -168,8 +176,22 @@ public class FeatureFunction {
 		return results;
 	}
 
-	// Implementation of f6
-	public double[] feature68(State s)
+	/**
+	 * F6: Cumulative well
+	 *
+	 * Sum of the accumulated depths of the wells. Implemented by traversing through each column,
+	 * comparing the height to the height of the lowest of the two neighbors. Boundary columns are
+	 * always compared to the neighbor towards the middle, as the edge is considered a column of maximum height.
+	 *
+	 * F8: Average column height
+	 *
+	 * The average height of all the columns. Implemented by adding the top of each column,
+	 * dividing by the number of columns.
+	 *
+	 * @param s The state to check
+	 * @return An array of results of cumulative well and average column height
+     */
+	public double[] features68(State s)
 	{
 		int[] top = s.getTop();
 		double cumulativeWells = 0, total=0;
