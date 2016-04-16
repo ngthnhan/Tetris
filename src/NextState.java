@@ -60,10 +60,6 @@ public class NextState extends State {
         action = -1;
     }
 
-    public boolean hasActed() {
-        return action >= 0;
-    }
-
     public State getOriginalState() { return originalState; }
 
     public int getRowsCleared() { return cleared; }
@@ -76,18 +72,10 @@ public class NextState extends State {
         }
     }
 
-    public void setFieldShallow(int[][] newField) {
-        this.field = newField;
-    }
-
     public int[] getTop() { return top; }
 
     public void setTopDeep(int[] newTop) {
         this.top = Arrays.copyOf(newTop, newTop.length);
-    }
-
-    public void setTopShallow(int[] newTop) {
-        this.top = newTop;
     }
 
     public int getAction() { return action; }
@@ -101,11 +89,6 @@ public class NextState extends State {
     public void makeMove(int move) {
         action = move;
         makeMove(legalMoves[nextPiece][move]);
-    }
-
-    public void makeMoveWithRandomNext(int move) {
-        makeMove(move);
-        nextPiece = randomPiece();
     }
 
     public boolean makeMove(int orient, int slot) {
@@ -166,10 +149,4 @@ public class NextState extends State {
 
         return true;
     }
-
-    public static void main(String[] args) {
-        State s = new State();
-        NextState ns = new NextState(s);
-    }
-
 }
