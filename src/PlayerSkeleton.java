@@ -29,7 +29,6 @@ class Player implements Runnable {
 
 	Player(String policyFile, int gameLimit) {
 		this.reportFileName = "report_" + policyFile;
-
 		this.policyFile = new File(Learner.LEARNER_DIR, policyFile);
 
 		this.score = 0;
@@ -96,35 +95,6 @@ class Player implements Runnable {
 	private static synchronized void writeToReport(Player p, String fileName) {
 		File f = new File(fileName);
 		boolean exists = f.exists() && f.isFile();
-
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(f, exists))){
-			if (!exists) {
-				writeReportHeader(bw, p);
-			}
-
-			String s = new Integer(p.getScore()).toString();
-			bw.write(s);
-			bw.newLine();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Write the result to the report file given. If the file does not exist yet,
-	 * it will create a header and append the result. Otherwise, it will just
-	 * append the result
-	 *
-	 * @param p The player that is trying to write the result
-	 * @param f The file that the result should be written to
-	 */
-	private static synchronized void writeToReport(Player p, File f) {
-		boolean exists = f.exists() && f.isFile();
-		if (!exists) try {
-			f.createNewFile();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(f, exists))){
 			if (!exists) {
@@ -373,6 +343,11 @@ class Learner implements Runnable {
 		if (rand == null) {
 			rand = new Random();
 			rand.setSeed(System.currentTimeMillis());
+		}
+
+		File dir = new File(Learner.LEARNER_DIR);
+		if (!dir.exists() || !dir.isDirectory()) {
+			dir.mkdir();
 		}
 
 
