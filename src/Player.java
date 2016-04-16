@@ -251,7 +251,7 @@ class Player implements Runnable {
 
         final Thread[] threads = new Thread[numOfPlayers];
         for (int i = 0; i < numOfPlayers; i++) {
-            threads[i] = new Thread(new Player(fileName, limit));
+            threads[i] = new Thread(new Player(fileName, limit/numOfPlayers));
             threads[i].start();
         }
 
