@@ -377,28 +377,37 @@ public class Learner implements Runnable {
      * Future change: Make it a stochastic gradient ascent algorithm
      * Get value of each state using player to critic.
      */
-    public static void consolidateLearning() {
+    public static void consolidateLearning(final int numOfLearners, final int startingId) {
         File dir = new File(LEARNER_DIR);
-        File targetFile = new File("final_weights.txt");
+        File targetFile = new File(String.format("weight_%d_%d.txt", numOfLearners, startingId));
 
         double[] finalWeights = new double[K];
         int count = 0;
-        try (BufferedReader br = new BufferedReader(new FileReader(targetFile))){
+        try (BufferedReader br = new BufferedReader(new FileReader(targetFile))) {
             Scanner sc = new Scanner(br);
             count = sc.nextInt();
             for (int i = 0; i < K; i++) {
                 finalWeights[i] = sc.nextDouble();
             }
+        } catch (IOException e) {
+            System.out.println("File does not exist. Initialize new file.");
+        }
 
-            FilenameFilter fileNameFilter = new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return name.matches("^weight\\d+\\.txt$");
+        FilenameFilter fileNameFilter = new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                boolean valid = false;
+                for (int i = 0; i < numOfLearners; i++) {
+                    int id = startingId + i;
+                    valid = valid || name.matches(String.format("^weight%d\\.txt$", id));
                 }
-            };
+                return valid;
+            }
+        };
 
+        try {
             for (File w: dir.listFiles(fileNameFilter)) {
-                sc = new Scanner(w);
+                Scanner sc = new Scanner(w);
                 count++;
                 for (int i = 0; i < K; i++) {
                     finalWeights[i] += sc.nextDouble();
@@ -406,8 +415,6 @@ public class Learner implements Runnable {
             }
         } catch (FileNotFoundException|NullPointerException e) {
             System.out.println("File not found.");
-        }  catch (IOException e) {
-            System.out.println("File does not exist. Initialize new file.");
         }
 
         BufferedWriter bw = null;
@@ -460,7 +467,7 @@ public class Learner implements Runnable {
         }
 
         System.out.println("Done learning or interrupted. Beginning to consolidate learning.");
-        consolidateLearning();
+        consolidateLearning(numOfLearners, startingId);
 //        try {
 //            consolidateLearning_SGD();
 //        } catch (FileNotFoundException e) {
