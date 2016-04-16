@@ -389,11 +389,7 @@ public class Learner implements Runnable {
             for (int i = 0; i < K; i++) {
                 finalWeights[i] = sc.nextDouble();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
-        try {
             FilenameFilter fileNameFilter = new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
@@ -402,14 +398,16 @@ public class Learner implements Runnable {
             };
 
             for (File w: dir.listFiles(fileNameFilter)) {
-                Scanner sc = new Scanner(w);
+                sc = new Scanner(w);
                 count++;
                 for (int i = 0; i < K; i++) {
                     finalWeights[i] += sc.nextDouble();
                 }
             }
         } catch (FileNotFoundException|NullPointerException e) {
-            e.printStackTrace();
+            System.out.println("File not found.");
+        }  catch (IOException e) {
+            System.out.println("File does not exist. Initialize new file.");
         }
 
         BufferedWriter bw = null;
@@ -448,7 +446,7 @@ public class Learner implements Runnable {
 
         Thread[] threads = new Thread[numOfLearners];
         for (int i = 0; i < numOfLearners; i++) {
-            threads[i] = new Thread(new Learner(i + startingId, sampleSize));
+            threads[i] = new Thread(new Learner(i + startingId, sampleSize / numOfLearners));
             threads[i].start();
         }
 
