@@ -255,9 +255,10 @@ public class Learner implements Runnable {
         int count = 20;
 
         do {
+            System.out.println(count);
             prevWeights = Arrays.copyOf(weights, weights.length);
             // Making random move to generate sample
-            weights = LSTDQ_OPT(50000);
+            weights = LSTDQ_OPT(500000);
 
         } while (difference(prevWeights, weights) >= EPSILON && count-- > 0);
 

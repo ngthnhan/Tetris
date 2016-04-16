@@ -27,7 +27,7 @@ public class FeatureFunction {
 
     // Feature 10
 
-	public static final int NUM_OF_FEATURE = 7;
+	public static final int NUM_OF_FEATURE = 8;
 	public static final int F1 	= 0; // Landing height
 	public static final int F2 	= 1; // Rows clear
 	public static final int F3 	= 2; // Row transition
@@ -35,15 +35,16 @@ public class FeatureFunction {
 	public static final int F5 	= 4; // Num of holes
 	public static final int F6 	= 5; // Well sum
 	public static final int F7 	= 10; // Hole depth
-	public static final int F8 	= 7; // Row hole
-	public static final int F9 	= 8; // Number of different pieces accommodated
+	public static final int F8 	= 16; // Row hole
+	public static final int F9 	= 11; // Number of different pieces accommodated
 	public static final int F10 = 9; // Total number of pieces + rotations accommodated
 	public static final int F11	= 6;
-	public static final int F12	= 11; 
+	public static final int F12	= 7; 
 	public static final int F13	= 12; 
 	public static final int F14	= 13; 
 	public static final int F15 = 14; 
 	public static final int F16 = 15;
+	public static final int F17 = 8;
 
 
 	private double[] featuresVector = new double[NUM_OF_FEATURE];
@@ -133,11 +134,12 @@ public class FeatureFunction {
 		features[F4] = features45Return[0];
 		features[F5] = features45Return[1];
 		features[F11] = features45Return[2];
+		//features[F17] = features45Return[3];
 		double[] features6Return = feature6(ns);
 		features[F6] = features6Return[0];
-//		features[F12] = features6Return[1];
-//		features[F13] = features6Return[2];
-//		features[F14] = features6Return[3];
+		features[F12] = features6Return[1];
+		//features[F13] = features6Return[2];
+		//features[F14] = features6Return[3];
 //		features[F15] = features6Return[4];
 //		features[F16] = features6Return[5];
 //		features[F7] = features7(ns);
@@ -233,7 +235,7 @@ public class FeatureFunction {
 		int columnTransitions = 0;
 		// Feature 5 result:
 		int holes = 0;
-		int gaps = 0;
+		int gaps = 0, totalBlocks=0;
 		boolean columnDone = false;
 
 		// Traverse each column
@@ -248,6 +250,8 @@ public class FeatureFunction {
 					holes++;
 				if ((field[j][i] == 0) && j<top[i])
 					gaps++;
+				if ((field[j][i] != 0))
+					totalBlocks++;
 				// Break if rest of column is empty
 				if(j >= top[i])
 					columnDone = true;
@@ -256,7 +260,7 @@ public class FeatureFunction {
 				continue;
 		}
 
-		int[] results = {columnTransitions, holes, gaps};
+		int[] results = {columnTransitions, holes, gaps, totalBlocks};
 		return results;
 	}
 

@@ -24,10 +24,11 @@ public class PlayerSkeleton {
 	public double[] readWeights(String fileName) {
 		double[] w = new double[FeatureFunction.NUM_OF_FEATURE];
 		try (Scanner sc = new Scanner(new FileReader(fileName))) {
-			int i = 0;
-			while (sc.hasNextDouble()) {
-				w[i++] = sc.nextDouble();
-			}
+			int i;
+			for (i = 0; i < FeatureFunction.NUM_OF_FEATURE; i++) {
+				w[i] = Double.parseDouble(sc.nextLine());
+				//System.out.println(w[i]);
+			}	
 
 			if (i != FeatureFunction.NUM_OF_FEATURE) {
 				System.out.println("There are fewer weights than needed");
@@ -121,7 +122,7 @@ public class PlayerSkeleton {
 /*		nextState.copyState(s);
 		currentFeatures = ff.computeFeaturesVector(nextState);
 		learning(currentFeatures,bestFeatures,num);
-*/		if (DEBUG) {
+*/		if (false) {
 			printFeatures(bestFeatures);
 		}
 		/*
@@ -156,19 +157,19 @@ public class PlayerSkeleton {
 		PlayerSkeleton p = new PlayerSkeleton();
 		while(!s.hasLost()) {
 			s.makeMove(p.pickMove(s,s.legalMoves()));
-			s.draw();
+			/*s.draw();
 			s.drawNext(0,0);
 			try {
-				if (p.DEBUG) {
+				if (false) {
 					System.in.read();
 				} else {
-					Thread.sleep(300);
+					Thread.sleep(0);
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
-			}
+			}*/
 		}
 		System.out.println("You have completed "+s.getRowsCleared()+" rows.");
 	}
