@@ -47,6 +47,11 @@ class Player implements Runnable {
         readPolicy();
     }
 
+    /**
+     * Reading the policy (weights vector) from the given file inside
+     * Learner folder
+     *
+     */
     private void readPolicy() {
         try (Scanner sc = new Scanner(new FileReader(policyFile))) {
             for (int i = 0; i < weights.length; i++) {
@@ -60,6 +65,14 @@ class Player implements Runnable {
         }
     }
 
+    /**
+     * Write the report header to include information about the policy being used
+     * and the time the file is first created.
+     *
+     * @param bw The writer that it tries to write to
+     * @param p The player that it trying to write report.
+     * @throws IOException
+     */
     private static void writeReportHeader(BufferedWriter bw, Player p) throws IOException {
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
@@ -78,6 +91,14 @@ class Player implements Runnable {
         bw.write(sb.toString());
     }
 
+    /**
+     * Write the result to the report file name given. If the file does not exist yet,
+     * it will create the file, write the header and append the result. Otherwise, it
+     * will just append the result
+     *
+     * @param p The player that is trying to write the result
+     * @param fileName The name of the report file that the result should be written to
+     */
     private static synchronized void writeToReport(Player p, String fileName) {
         File f = new File(fileName);
         boolean exists = f.exists() && f.isFile();
@@ -95,6 +116,14 @@ class Player implements Runnable {
         }
     }
 
+    /**
+     * Write the result to the report file given. If the file does not exist yet,
+     * it will create a header and append the result. Otherwise, it will just
+     * append the result
+     *
+     * @param p The player that is trying to write the result
+     * @param f The file that the result should be written to
+     */
     private static synchronized void writeToReport(Player p, File f) {
         boolean exists = f.exists() && f.isFile();
         if (!exists) try {
@@ -116,6 +145,12 @@ class Player implements Runnable {
         }
     }
 
+    /**
+     * Create a fresh new State object and start playing based on the given policy
+     * until it loses.
+     *
+     * Store the score with the number of rows cleared.
+     */
     private void play() {
         State s = new State();
         inGame = true;
@@ -179,6 +214,14 @@ class Player implements Runnable {
         }
     }
 
+    /**
+     * Allow parallel playing the same policy file.
+     *
+     * @param args The string array of arguments passed
+     *             fileName: the name of the policy file. Default is ""
+     *             numOfPlayers: the number of players to play. Default is 4
+     *             limit: the number of game limit that the player should play. Default is infinitely
+     */
     public static void main(String[] args) {
         String fileName = args.length >= 1 && args[0] != null ? args[0] : "";
         int numOfPlayers = args.length >= 2 && args[1] != null ? Integer.parseInt(args[1]) : 4;
