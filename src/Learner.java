@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 public class Learner implements Runnable {
     private double[] weights;
     private int id;
+    private int sampleSize;
     private String weightFileName;
     private File weightFile;
 
@@ -21,6 +22,7 @@ public class Learner implements Runnable {
     private final int INFINITE = -1;
     private final double GAMMA = 0.9;
     private final double EPSILON = 0.0005;
+    private final double MIN_VAL = Double.NEGATIVE_INFINITY;
 
     private static Random rand;
     private static ArrayList<String> samplesSource;
@@ -29,8 +31,9 @@ public class Learner implements Runnable {
 
     private static final int K = FeatureFunction.NUM_OF_FEATURE;
 
-    private Learner(int id) {
+    private Learner(int id, int sampleSize) {
         this.id = id;
+        this.sampleSize = sampleSize;
         this.weightFileName = String.format("weight%d.txt", id);
 
         if (samplesSource == null) samplesSource = new ArrayList<String>();
@@ -164,7 +167,7 @@ public class Learner implements Runnable {
                 for (int piece = 0; piece < State.N_PIECES; piece++) {
                     ns.setNextPiece(piece);
                     nns.copyState(ns);
-                    nns.makeMove(PlayerSkeleton.pickBestMove(nns, weights));
+                    nns.makeMove(pickBestMove(nns, weights));
 
                     phi_ = matrix.convertToColumnVector(ff.computeFeaturesVector(nns));
                     sumPhi = matrix.matrixAdd(sumPhi, phi_);
@@ -192,6 +195,25 @@ public class Learner implements Runnable {
         return weights;
     }
 
+    private int pickBestMove(State s, double[] w) {
+        int bestMove=0, currentMove;
+        double bestValue = MIN_VAL, currentValue;
+        NextState ns = new NextState();
+
+        for (currentMove = 0; currentMove < s.legalMoves().length; currentMove++)
+        {
+            ns.copyState(s);
+            ns.makeMove(currentMove);
+            currentValue = ff.valueOfState(ns, w);
+            if (currentValue > bestValue) {
+                bestMove = currentMove;
+                bestValue = currentValue;
+            }
+        }
+
+        return bestMove;
+    }
+
     /**
      * This is mainly the wrapper to continuously iterate through samples and give it
      * to LSTDQ to adjust the weight.
@@ -213,11 +235,16 @@ public class Learner implements Runnable {
             System.out.println(count);
             prevWeights = Arrays.copyOf(weights, weights.length);
             // Making random move to generate sample
-            weights = LSTDQ_OPT(500000);
+            weights = LSTDQ_OPT(sampleSize);
 
         } while (difference(prevWeights, weights) >= EPSILON && count-- > 0);
 
         System.out.println(count);
+        for (int i = 0; i < K; i++) {
+            weights[i] = weights[i] < 0 ? weights[i] : -weights[i];
+        }
+        weights[FeatureFunction.F2] = - weights[FeatureFunction.F2];
+
         return weights;
     }
 
@@ -417,10 +444,11 @@ public class Learner implements Runnable {
     public static void main(String[] args) {
         int numOfLearners = args.length >= 1 && args[0] != null ? Integer.parseInt(args[0]) : 1;
         int startingId = args.length >= 2 && args[1] != null ? Integer.parseInt(args[1]) : 0;
+        int sampleSize = args.length >= 3 && args[2] != null ? Integer.parseInt(args[2]) : 50000;
 
         Thread[] threads = new Thread[numOfLearners];
         for (int i = 0; i < numOfLearners; i++) {
-            threads[i] = new Thread(new Learner(i + startingId));
+            threads[i] = new Thread(new Learner(i + startingId, sampleSize));
             threads[i].start();
         }
 

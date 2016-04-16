@@ -21,6 +21,9 @@ class Player implements Runnable {
     private File policyFile;
     private File reportFile;
 
+    private final double MIN_VAL = Double.NEGATIVE_INFINITY;
+    private FeatureFunction ff = new FeatureFunction();
+
     private int score;
     private int gameLimit;
 
@@ -155,7 +158,7 @@ class Player implements Runnable {
         State s = new State();
         inGame = true;
         while(!s.hasLost()) {
-            s.makeMove(PlayerSkeleton.pickBestMove(s, weights));
+            s.makeMove(pickBestMove(s, weights));
         }
 
         this.score = s.getRowsCleared();
@@ -212,6 +215,25 @@ class Player implements Runnable {
             e.printStackTrace();
             return null;
         }
+    }
+
+    private int pickBestMove(State s, double[] w) {
+        int bestMove=0, currentMove;
+        double bestValue = MIN_VAL, currentValue;
+        NextState ns = new NextState();
+
+        for (currentMove = 0; currentMove < s.legalMoves().length; currentMove++)
+        {
+            ns.copyState(s);
+            ns.makeMove(currentMove);
+            currentValue = ff.valueOfState(ns, w);
+            if (currentValue > bestValue) {
+                bestMove = currentMove;
+                bestValue = currentValue;
+            }
+        }
+
+        return bestMove;
     }
 
     /**

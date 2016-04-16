@@ -68,11 +68,11 @@ public class FeatureFunction {
 		features[F2] = getErodedPieces(ns);
 		features[F3] = getRowTransition(ns);
 
-		int[] features45Return = features45(ns);
+		int[] features45Return = features457(ns);
 		features[F4] = features45Return[0];
 		features[F5] = features45Return[1];
 		features[F7] = features45Return[2];
-		double[] features6Return = feature6(ns);
+		double[] features6Return = feature68(ns);
 		features[F6] = features6Return[0];
 		features[F8] = features6Return[1];
 
