@@ -1,8 +1,5 @@
 import java.util.Arrays;
 
-/**
- * Created by nhan on 28/3/16.
- */
 public class NextState extends State {
     private State originalState;
     private int turn = 0;
